@@ -1,0 +1,3257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pacto Simulator — Gino Costa al Senado</title>
+<meta name="description" content="¿Cuánto duras manejando el pacto mafioso? Un juego sobre corrupción sistémica. Después pregúntate quién lo pelea en el Senado.">
+<meta property="og:title" content="Pacto Simulator — ¿Cuánto duras como el pacto mafioso?">
+<meta property="og:description" content="Maneja minería ilegal, narcotráfico y extorsión. Compra congresistas. Aprueba leyes de impunidad. ¿Cuánto sobrevives?">
+<meta property="og:url" content="pactosimulator.html">
+<link rel="canonical" href="pactosimulator.html">
+<meta property="og:type" content="website">
+<meta property="og:image" content="og-pacto.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Pacto Simulator — ¿Cuánto duras como el pacto mafioso?">
+<meta name="twitter:description" content="Minería ilegal, narcotráfico, extorsión. Compra congresistas. ¿Cuánto sobrevives?">
+<meta name="twitter:image" content="og-pacto.png">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="../fonts.googleapis.com/css2__q__family=Press_Start_2P_family=VT323_family=Noto_Color_Emoji_display=swap.html">
+<link rel="stylesheet" href="../fonts.googleapis.com/css2__q__family=Press_Start_2P_family=VT323_family=Noto_Color_Emoji_display=swap.html">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#EDE4D0;--magenta:#866342;--hotPink:#B7916A;--green:#88E060;--yellow:#FFD948;
+  --orange:#FA8132;--cyan:#35BAF3;--red:#E86A17;--purple:#616374;--panelBg:#D8CCAE;
+  --text:#3A2A1A;--dim:#5A4A3A;--dimLight:#C9AC92;--gold:#B8860B;--border:#B1A077
+}
+body{background:#EDE4D0;cursor:url('/ui/cursorGauntlet_bronze.png'),auto;color:var(--text);font-family:'VT323','Noto Color Emoji',monospace;overflow:hidden;height:100dvh}
+canvas,.tab,.action-btn,#start-btn,#restart-btn{user-select:none}
+.tab,.action-btn,#start-btn,#restart-btn,.gino-share a,.go-cta,.go-cta-secondary,.dilemma-opt{touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:url('/ui/cursorHand_beige.png'),pointer}
+#side-panel,#drawer-content,#intro,#game-over{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+
+/* ★ TOP BAR — Level 1: brown panel */
+#top-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border:8px solid transparent;border-image:url('/ui/panel_brown.png') 14 fill stretch;height:52px;z-index:10}
+#game-title{font-family:'Press Start 2P',monospace;font-size:14px;color:#FFF5E0;text-shadow:1px 1px 0 #000,0 0 6px rgba(0,0,0,0.5)}
+.stat-group{display:flex;gap:12px;align-items:center}
+.stat{display:flex;align-items:center;gap:6px;font-size:22px}
+.stat-val{font-family:'Press Start 2P',monospace;font-size:14px;color:#FFF5E0;text-shadow:1px 1px 0 #000,0 0 4px rgba(0,0,0,0.6)}
+.stat-val.money{color:#FFE066;text-shadow:1px 1px 0 #3A1A00,0 0 6px rgba(0,0,0,0.7)}
+.stat-val.deficit{color:#FF8A3C;text-shadow:1px 1px 0 #400000,0 0 6px rgba(0,0,0,0.7)}
+#money-detail{font-size:20px;color:#FFF5E0;font-weight:bold;text-shadow:1px 1px 0 #000}
+#money-detail .inc{color:#9EF06E;font-size:20px;text-shadow:1px 1px 0 #003000}
+#money-detail .exp{color:#FF8A3C;font-size:20px;text-shadow:1px 1px 0 #400000}
+
+/* ★ TAB BAR — Level 1: beige panel, tabs are just text */
+#tab-bar{display:flex;border:6px solid transparent;border-image:url('/ui/panel_beige.png') 12 fill stretch;z-index:10;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{flex:1;min-width:0;padding:10px 6px;text-align:center;font-family:'Press Start 2P',monospace;font-size:10px;cursor:url('/ui/cursorHand_beige.png'),pointer;transition:all .2s;position:relative;white-space:nowrap;color:#5A4A3A}
+.tab>span:first-child{display:inline-flex;align-items:center;gap:4px}
+.tab:hover{color:#3A2A1A}
+.tab.active{color:#3A2A1A;font-weight:bold;background:rgba(58,42,26,0.15)}
+.tab.active::after{content:'';position:absolute;bottom:2px;left:15%;right:15%;height:3px;background:#3A2A1A}
+.tab-sub{font-family:'VT323',monospace;font-size:16px;opacity:1;color:#5A4A3A;font-weight:bold}
+.ext-short{display:none}
+
+/* ★ MAIN LAYOUT */
+#main{display:flex;flex-direction:column;height:calc(100dvh - 52px - 48px - 110px - 28px);overflow:hidden}
+#scene-wrap{width:100%;flex:1;position:relative;overflow:hidden;min-height:120px}
+#scene-wrap canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+
+/* ★ SIDE PANEL — Level 1: brown panel (like Kenney's right panel) */
+#side-panel{display:flex;flex-direction:column;gap:8px;padding:12px;overflow-y:auto;border:8px solid transparent;border-image:url('/ui/panel_brown.png') 14 fill stretch;flex-shrink:0;max-height:45dvh}
+#drawer-content{overflow-y:auto;flex:1;padding-bottom:env(safe-area-inset-bottom)}
+
+/* ★ Desktop override */
+@media(min-width:768px){
+  #main{flex-direction:row}
+  #scene-wrap{flex:1;height:auto}
+  #side-panel{width:320px;min-width:320px;max-height:none}
+  #drawer-content{padding-bottom:0}
+  #bottom-bar .money-flow-wrap{display:flex!important}
+}
+
+/* ★ PANELS — Level 2: beige inset inside brown panel */
+.panel-box{border:6px solid transparent;border-image:url('/ui/panelInset_beige.png') 10 fill stretch;padding:10px;margin-bottom:6px}
+.panel-title{font-family:'Press Start 2P',monospace;font-size:10px;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;color:#3A2A1A}
+.panel-title::before,.panel-title::after{content:' ★ ';color:#5A4A3A;font-size:8px}
+.action-btn{display:block;width:100%;padding:12px 14px;margin-bottom:6px;border:6px solid transparent;border-image:url('/ui/buttonLong_beige.png') 10 fill stretch;color:#3A2A1A;font-family:'VT323',monospace;font-size:22px;cursor:pointer;text-align:left;transition:all .15s;min-height:44px}
+.action-btn:hover{border-image-source:url('/ui/buttonLong_brown.png');color:#EDE4D0}
+.action-btn:active{transform:scale(.98);border-image-source:url('/ui/buttonLong_brown_pressed.png');color:#EDE4D0}
+.action-btn .cost{float:right;color:#5A4A3A;font-size:20px;font-weight:bold}
+.action-btn .risk{float:right;color:#8A2000;font-size:20px;margin-right:4px}
+.action-btn .law-name{display:block;font-size:16px;color:#5A4A3A;font-style:italic;margin-top:2px}
+.action-btn:disabled{opacity:0.35;cursor:default;border-image-source:url('/ui/buttonLong_grey.png')}
+.stats-text{font-size:20px;line-height:1.8;color:#3A2A1A}
+.stats-text .label{color:#5A4A3A}.stats-text .val{color:#3A2A1A;font-weight:bold}
+.stats-text .val-gold{color:#B8860B;font-weight:bold}
+.stats-text .val-red{color:#8A2000;font-weight:bold}
+.stats-text .val-green{color:#2D7A1A;font-weight:bold}
+
+/* ★ BOTTOM BAR — Level 1: brown panel */
+#bottom-bar{display:flex;gap:10px;padding:10px 14px;border:8px solid transparent;border-image:url('/ui/panel_brown.png') 14 fill stretch;height:110px;align-items:stretch;z-index:10;overflow:hidden}
+/* Threats — Level 2: beige inset (like Kenney's health bars) */
+.threat{flex:1 1 0;min-width:0;border:6px solid transparent;border-image:url('/ui/panelInset_beige.png') 10 fill stretch;padding:8px 10px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.threat-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px}
+.threat-name{display:inline-flex;align-items:center;gap:4px;font-family:'Press Start 2P',monospace;font-size:10px;color:#3A2A1A}
+.threat-label-short{display:none}
+.threat-val{font-family:'Press Start 2P',monospace;font-size:10px;color:#3A2A1A}
+/* Bars — dark bg like Kenney's barBack, colored fill */
+.threat-bar-bg{height:16px;background:linear-gradient(180deg,#6A5847 0%,#4B3E31 100%);border-radius:2px;overflow:hidden;border:1px solid #3A2A1A;box-shadow:inset 0 1px 0 rgba(255,255,255,0.08)}
+.threat-bar-fill{height:100%;width:100%;transform-origin:left center;transition:transform .45s ease;border-radius:1px}
+.threat-bar-fill.fiscal{background:linear-gradient(180deg,#FFB066 0%,#FA8132 60%,#C85B17 100%)}
+.threat-bar-fill.prensa{background:linear-gradient(180deg,#79D9FF 0%,#35BAF3 60%,#147DAF 100%)}
+.threat-bar-fill.pueblo{background:linear-gradient(180deg,#B6F487 0%,#88E060 60%,#4E9F34 100%)}
+/* Money flow — Level 2: beige inset */
+.money-flow-wrap{flex:1.2;border:6px solid transparent;border-image:url('/ui/panelInset_beige.png') 10 fill stretch;padding:6px 8px;font-size:18px;line-height:1.25;overflow:hidden;display:none;flex-direction:column;justify-content:flex-start}
+.money-flow-wrap .mf-title{font-family:'Press Start 2P',monospace;font-size:7px;color:#5A4A3A;margin-bottom:2px}
+.money-flow-wrap .mf-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+.money-flow-wrap .mf-row{display:flex;justify-content:space-between}
+.money-flow-wrap .mf-inc{color:#2D7A1A}
+.money-flow-wrap .mf-exp{color:#8A2000}
+.money-flow-wrap .mf-net{color:#3A2A1A;font-weight:bold;border-top:1px solid #B1A077;margin-top:1px;padding-top:1px;grid-column:1/-1}
+
+/* ★ NEWS MARQUEE — dark strip */
+#news-bar{height:28px;background:#5A4A3A;overflow:hidden;display:flex;align-items:center;z-index:10;position:relative}
+#news-bar .news-label{font-family:'Press Start 2P',monospace;font-size:7px;color:#EDE4D0;background:#3A2A1A;padding:4px 10px;white-space:nowrap;flex-shrink:0;letter-spacing:1px}
+#news-content{flex:1;overflow:hidden;white-space:nowrap;font-family:'VT323',monospace;font-size:20px;font-weight:bold;color:#FFD948;padding:0 8px}
+#news-content span{display:inline-block;animation:marquee-scroll 12s linear infinite;padding-left:100%}
+@keyframes marquee-scroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+
+/* ★ ACT BANNER — narrative arc moments */
+#act-banner{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.8);background:rgba(0,0,0,0.92);border:6px solid #FFD948;padding:24px 48px;text-align:center;z-index:1500;opacity:0;pointer-events:none;transition:opacity .35s ease,transform .35s ease;box-shadow:0 0 60px rgba(255,217,72,0.4)}
+#act-banner.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#act-banner .ab-act{font-family:'Press Start 2P',monospace;font-size:24px;color:#FFD948;letter-spacing:4px;margin-bottom:12px;text-shadow:0 0 20px rgba(255,217,72,0.6)}
+#act-banner .ab-sub{font-family:'VT323',monospace;font-size:24px;color:#EDE4D0;letter-spacing:1px}
+@media(max-width:767px){
+  #act-banner{padding:16px 24px}
+  #act-banner .ab-act{font-size:16px}
+  #act-banner .ab-sub{font-size:18px}
+}
+
+/* ★ LEADERBOARD MODAL */
+#leaderboard-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:2500;align-items:center;justify-content:center;padding:20px}
+#leaderboard-modal.active{display:flex}
+.lb-box{background:#1a1a1a;border:4px solid #FFD948;max-width:520px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 0 60px rgba(255,217,72,0.3)}
+.lb-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:2px solid #5A4A3A}
+.lb-header h3{font-family:'Press Start 2P',monospace;font-size:11px;color:#FFD948;letter-spacing:2px;margin:0}
+.lb-close{background:transparent;border:none;color:#C9AC92;font-size:32px;cursor:pointer;line-height:1;padding:0 8px}
+.lb-close:hover{color:#FFD948}
+#leaderboard-content{padding:16px 20px;overflow-y:auto;flex:1}
+.lb-empty{font-family:'VT323',monospace;font-size:18px;color:#96704A;text-align:center;padding:32px 0}
+.lb-submit-box{background:#3A2A1A;border:2px solid #FFD948;padding:14px;margin-bottom:16px}
+.lb-prompt{font-family:'VT323',monospace;font-size:18px;color:#EDE4D0;margin-bottom:10px}
+.lb-prompt b{color:#FFD948}
+.lb-submit-box input{display:block;width:100%;background:#1a1a1a;border:2px solid #5A4A3A;color:#fff;font-family:'VT323',monospace;font-size:18px;padding:10px;margin-bottom:10px;outline:none}
+.lb-submit-box input:focus{border-color:#FFD948}
+.lb-submit-box button{display:block;width:100%;background:#FFD948;color:#1a1a1a;border:none;font-family:'Press Start 2P',monospace;font-size:10px;padding:14px;cursor:pointer;letter-spacing:1px}
+.lb-submit-box button:hover{background:#fff}
+.lb-submit-box button:disabled{opacity:0.5;cursor:default}
+.lb-list{display:flex;flex-direction:column;gap:4px}
+.lb-row{display:grid;grid-template-columns:32px 1fr 50px 80px 50px;gap:8px;align-items:center;padding:8px 10px;background:#2a2018;font-family:'VT323',monospace;font-size:17px;color:#EDE4D0}
+.lb-row.me{background:#3A2A1A;border-left:3px solid #FFD948}
+.lb-rank{font-family:'Press Start 2P',monospace;font-size:9px;color:#96704A;text-align:right}
+.lb-row.me .lb-rank{color:#FFD948}
+.lb-name{color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-stat{font-size:14px;color:#C9AC92;text-align:right}
+
+/* ★ THREAT FLASH — when amenazas cross thresholds */
+@keyframes threat-flash{0%{box-shadow:inset 0 0 0 3px rgba(255,80,80,0.9);background:rgba(255,0,0,0.15)}100%{box-shadow:inset 0 0 0 0 rgba(255,80,80,0);background:transparent}}
+.threat.flash{animation:threat-flash 1.2s ease-out}
+
+/* ★ LAW PASSED FLASH */
+@keyframes law-flash{0%{background:rgba(255,217,72,0)}30%{background:rgba(255,217,72,0.4)}100%{background:rgba(255,217,72,0)}}
+body.law-flash{animation:law-flash .6s ease-out}
+
+/* ★ GAME OVER */
+#game-over{display:flex;position:fixed;inset:0;background:#000;z-index:9000;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow-y:auto;padding:24px 20px;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(12px);transition:opacity .3s ease,transform .3s ease}
+#game-over.active{opacity:1;visibility:visible;pointer-events:auto;transform:none}
+#game-over h1{font-family:'Press Start 2P',monospace;font-size:32px;color:#C63018;margin-bottom:24px;letter-spacing:3px;text-shadow:0 0 34px rgba(250,129,50,0.55),0 0 12px rgba(138,32,0,0.8);transform-origin:center}
+#game-over.active h1{animation:go-headline-in .4s ease-out}
+#game-over .go-sub{font-family:'VT323',monospace;font-size:22px;max-width:500px;line-height:1.7;margin-bottom:20px;color:#EDE4D0}
+#game-over .go-stats{font-family:'Press Start 2P',monospace;font-size:10px;color:#8A2000;margin-bottom:24px;letter-spacing:1px;line-height:2.2}
+#game-over .go-msg{font-family:'VT323',monospace;font-size:22px;color:#E8D5B7;max-width:480px;line-height:1.7;margin-bottom:28px}
+#game-over .go-connector{font-family:'VT323',monospace;font-size:18px;color:#C9AC92;max-width:420px;line-height:1.6;margin-bottom:24px}
+#game-over .go-proposals{text-align:left;max-width:420px;margin:0 auto 28px}
+#game-over .go-prop{padding:8px 12px;margin-bottom:6px;border-left:3px solid #FFD948;font-family:'VT323',monospace;font-size:20px;color:#EDE4D0;line-height:1.4}
+#game-over .go-prop b{color:#FFD948}
+#game-over .go-cta-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
+#game-over .go-cta{font-family:'Press Start 2P',monospace;font-size:10px;padding:14px 28px;background:transparent;border:2px solid #FFD948;color:#FFD948;cursor:pointer;text-decoration:none;transition:all .2s;min-height:44px;display:inline-block}
+#game-over .go-cta:hover{background:#FFD948;color:#3A2A1A}
+#game-over .go-cta-secondary{font-family:'Press Start 2P',monospace;font-size:9px;padding:12px 20px;background:transparent;border:2px solid #8B6F47;color:#C9AC92;cursor:pointer;transition:all .2s;min-height:44px}
+#game-over .go-cta-secondary:hover{border-color:#E8D5B7;color:#E8D5B7}
+#game-over .go-share{margin-top:16px;font-size:14px;color:#C9AC92;font-family:'VT323',monospace}
+#game-over .go-share a{color:#FFD948;text-decoration:none;margin:0 8px;min-height:44px;display:inline-block;padding:4px}
+
+/* ★ INTRO */
+#intro{position:fixed;inset:0;background:#0F0B09;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;overflow-y:auto}
+#intro.hidden{display:none}
+#intro h1{font-family:'Press Start 2P',monospace;font-size:32px;color:#E4C067;margin:12px 0 6px;letter-spacing:6px;text-shadow:3px 3px 0 #7A2D22,0 0 30px rgba(228,192,103,0.3)}
+#pacto-mascot{width:220px;height:220px;image-rendering:pixelated;display:block;margin:0 auto;animation:mascot-in .55s ease-out}
+.intro-tagline{font-family:'VT323',monospace;font-size:18px;color:#D9C9A7;letter-spacing:2px;margin-bottom:20px;text-transform:uppercase}
+@keyframes mascot-in{0%{opacity:0;transform:translateY(8px) scale(.96)}100%{opacity:1;transform:none}}
+.intro-text{font-family:'VT323',monospace;font-size:22px;max-width:520px;line-height:1.8;color:#D9C9A7}
+.intro-regions{display:flex;gap:12px;margin-bottom:32px;flex-wrap:wrap;justify-content:center}
+.intro-region{text-align:center;padding:14px 18px;border:1px solid rgba(181,90,42,0.4);border-color:rgba(181,90,42,0.4);width:130px;background:#17110E;border-radius:4px}
+.ir-icon{margin-bottom:6px}
+.ir-name{font-family:'Press Start 2P',monospace;font-size:7px;letter-spacing:1px}
+#start-btn{font-family:'Press Start 2P',monospace;font-size:11px;padding:16px 32px;background:transparent;border:2px solid #E4C067;color:#E4C067;cursor:pointer;letter-spacing:2px;transition:all .2s;min-height:44px}
+#start-btn:hover{background:#E4C067;color:#0F0B09;box-shadow:0 0 24px rgba(228,192,103,0.35)}
+#restart-btn{font-family:'Press Start 2P',monospace;font-size:10px;padding:12px 24px;background:transparent;border:2px solid var(--magenta);color:var(--magenta);cursor:pointer;min-height:44px}
+#restart-btn:hover{background:#EDE4D0}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,0,77,.3)}50%{box-shadow:0 0 20px 4px rgba(255,0,77,.15)}}
+
+/* (gino-brand and flow-chain removed — no longer used) */
+
+/* ★ Dilemma modal */
+#dilemma-modal{display:none;position:fixed;inset:0;background:rgba(8,8,12,0.9);z-index:1500;align-items:center;justify-content:center;padding:16px}
+#dilemma-modal.active{display:flex}
+.dilemma-box{background:#EDE4D0;border:8px solid transparent;border-image:url('/ui/panel_brown.png') 12 fill stretch;max-width:460px;width:100%;padding:0 20px 20px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.68);overflow:hidden}
+.dilemma-title{display:block;margin:0 -20px 16px;padding:16px 18px 14px;background:#0D0A08;border-bottom:4px solid #FFD948;font-family:'Press Start 2P',monospace;font-size:18px;letter-spacing:2px;color:#FFD948;text-shadow:0 0 12px rgba(255,217,72,0.35)}
+.dilemma-text{font-size:20px;line-height:1.55;margin-bottom:18px;color:#2D1F12;text-align:left}
+.dilemma-opts{display:flex;gap:8px;flex-direction:column}
+.dilemma-opt{padding:13px 14px;background:#EDE4D0;border:5px solid transparent;border-image:url('/ui/buttonLong_beige.png') 8 fill stretch;cursor:pointer;text-align:left;font-family:'VT323',monospace;font-size:18px;transition:all .15s;min-height:44px;box-shadow:0 3px 10px rgba(0,0,0,0.08)}
+.dilemma-opt:hover{border-image-source:url('/ui/buttonLong_brown.png');transform:translateY(-1px)}
+.dilemma-opt .do-label{font-weight:bold;color:#3A2A1A;display:block;margin-bottom:4px}
+.dilemma-opt .do-cost{font-size:14px;color:#6A4A2A}
+
+/* ★ Budget modal */
+#budget-modal{display:none;position:fixed;inset:0;background:rgba(26,26,42,0.8);z-index:1500;align-items:center;justify-content:center;padding:16px}
+#budget-modal.active{display:flex}
+.budget-box{background:#EDE4D0;border:8px solid transparent;border-image:url('/ui/panel_brown.png') 12 fill stretch;max-width:400px;width:100%;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,0.5)}
+.budget-box h3{font-family:'Press Start 2P',monospace;font-size:9px;color:#8A2000;margin-bottom:12px;text-align:center}
+.budget-month{border:5px solid transparent;border-image:url('/ui/panelInset_beige.png') 8 fill stretch;padding:8px;margin-bottom:8px}
+.budget-month .bm-title{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--dim);margin-bottom:6px}
+.budget-month .bm-row{display:flex;justify-content:space-between;font-size:16px;padding:1px 0}
+.budget-month .bm-inc{color:#2D7A1A}.budget-month .bm-exp{color:var(--red)}.budget-month .bm-net{font-weight:bold;border-top:1px solid var(--border);margin-top:4px;padding-top:4px}
+#budget-close{font-family:'Press Start 2P',monospace;font-size:8px;padding:10px 20px;background:#EDE4D0;border:5px solid transparent;border-image:url('/ui/buttonLong_brown.png') 8 fill stretch;color:#EDE4D0;cursor:pointer;margin-top:10px;display:block;width:100%;min-height:44px}
+
+/* ★ Tutorial overlay */
+#tutorial-overlay{display:none;position:fixed;inset:0;z-index:3000}
+#tutorial-overlay.active{display:block}
+.tut-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.6)}
+.tut-bubble{position:absolute;background:#EDE4D0;border:8px solid transparent;border-image:url('/ui/panel_beige.png') 12 fill stretch;padding:14px 16px;max-width:300px;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:1}
+.tut-bubble .tut-step{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--yellow);margin-bottom:6px}
+.tut-bubble .tut-text{font-size:18px;line-height:1.5;color:var(--text);margin-bottom:10px}
+.tut-bubble .tut-btn{font-family:'Press Start 2P',monospace;font-size:8px;padding:8px 16px;background:#EDE4D0;border:4px solid transparent;border-image:url('/ui/buttonLong_brown.png') 8 fill stretch;color:#3A2A1A;cursor:pointer;min-height:44px}
+.tut-bubble .tut-skip{font-size:14px;color:var(--dim);cursor:pointer;margin-left:12px;text-decoration:underline}
+
+/* ★ Game icons */
+.gi{display:inline-block;vertical-align:middle;width:1em;height:1em;object-fit:contain;margin-right:2px;padding:2px;background:#D3BF8F;border:1px solid #5A4A3A;border-radius:2px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.22);filter:none!important;image-rendering:pixelated}
+.tab .gi{width:16px;height:16px}
+#top-bar .gi{width:18px;height:18px}
+#bottom-bar .gi{width:13px;height:13px;margin-right:0}
+.threat-name .gi{width:13px;height:13px;margin-right:0}
+.panel-title .gi{width:16px;height:16px}
+.intro-region .gi{width:28px;height:28px;margin:0}
+
+/* ★ Seat tooltip */
+#seat-tooltip{position:absolute;display:none;background:#3A2A1A;color:#EDE4D0;font-family:'VT323',monospace;font-size:15px;padding:8px 12px;border:4px solid transparent;border-image:url('/ui/panelInset_brown.png') 8 fill stretch;pointer-events:none;z-index:20;max-width:200px;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,0.4)}
+#seat-tooltip .tt-icon{font-size:20px;display:inline-block;vertical-align:middle}
+#seat-tooltip .tt-logo{width:32px;height:32px;image-rendering:pixelated;vertical-align:middle;margin-right:6px;border:2px solid rgba(255,255,255,0.2)}
+#seat-tooltip .tt-party{font-weight:bold;color:var(--yellow)}
+#seat-tooltip .tt-real{font-size:13px;color:#C9AC92}
+#seat-tooltip .tt-status{margin-top:4px}
+#seat-tooltip .tt-bought{color:#2D7A1A}
+#seat-tooltip .tt-available{color:#FFD948}
+#seat-tooltip .tt-opposition{color:#C9AC92}
+
+/* ★ Scrollbar chicha */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#96704A;border-radius:0}
+
+/* Mobile adjustments */
+@media(max-width:767px){
+  #top-bar{padding:4px 6px;height:42px}
+  #game-title{display:none}
+  .stat-group{gap:8px}
+  .stat-val{font-size:10px}
+  .stat{font-size:18px}
+  #money-detail{display:none}
+  .tab{font-size:8px;padding:8px 4px;min-width:0;line-height:1.15}
+  .tab-sub{font-size:14px;opacity:1}
+  #bottom-bar{height:78px;gap:3px;padding:3px 4px}
+  .threat{padding:3px 6px;border-width:4px}
+  .threat-header{margin-bottom:3px}
+  .threat-name{font-size:7px;color:#3A2A1A;letter-spacing:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;gap:2px}
+  .threat-val{font-size:13px;min-width:0}
+  .threat-bar-bg{height:10px}
+  .threat-name .gi{width:10px;height:10px;padding:1px}
+  /* Show money +/- compactly on mobile next to S/ */
+  #money-detail{display:inline-block!important;font-size:10px;margin-left:2px}
+  #money-detail .inc,#money-detail .exp{font-size:10px}
+  #month-val{font-size:9px}
+  /* Shorten EXTORSIÓN tab on mobile */
+  .ext-full{display:none}
+  .ext-short{display:inline}
+  #news-bar{height:24px}
+  #news-content{font-size:15px}
+  #news-bar .news-label{font-size:6px;padding:3px 6px}
+  #main{height:calc(100dvh - 42px - 40px - 100px - 24px)}
+  #intro h1{font-size:22px;letter-spacing:4px;margin:14px 0 6px}
+  #pacto-mascot{width:160px;height:160px}
+  .intro-tagline{font-size:14px;margin-bottom:14px}
+  .intro-text{font-size:18px}
+  .intro-context{font-size:16px !important;margin-bottom:14px !important}
+  .intro-region{width:100px;padding:10px}
+  .go-lp-reveal{padding:18px 16px !important;margin:18px auto !important}
+  .panel-title,.ir-name{font-size:8px}
+  .action-btn{font-size:20px;padding:9px}
+  .action-btn .cost{font-size:18px}
+  .action-btn .law-name{font-size:14px}
+  .stats-text{font-size:18px}
+  #game-over h1{font-size:24px}
+  #game-over .go-msg{font-family:'VT323',monospace;font-size:20px;line-height:1.35}
+  #go-parties{display:none}
+  .gino-brand .gino-cta,.gino-brand .gino-secondary{display:block;width:100%;margin:8px 0 0}
+}
+@media(max-width:420px){
+  #bottom-bar{height:74px;gap:2px;padding:3px}
+  .threat{padding:3px 5px}
+  .threat-header{gap:4px}
+  .threat-val{font-size:12px}
+  .threat-name .gi{width:9px;height:9px}
+  .threat-label-full{display:none}
+  .threat-label-short{display:inline}
+}
+@keyframes go-headline-in{0%{opacity:0;transform:scale(.95)}100%{opacity:1;transform:scale(1)}}
+</style>
+</head>
+<body>
+
+<div id="intro">
+  <img src="sprites/obj-pacto-mascot.png" alt="El Pacto Mafioso" id="pacto-mascot">
+  <h1>PACTO SIMULATOR</h1>
+  <div class="intro-tagline">Inspirado en hechos reales</div>
+
+  <div class="intro-text" style="max-width:520px;font-size:22px;line-height:1.8;margin-bottom:16px">
+    Eres el <span style="color:#7A2D22;font-weight:bold">Pacto Mafioso</span>, una alianza de intereses corruptos para controlar el poder político y expandir la influencia de las economías criminales.
+  </div>
+
+  <div class="intro-context" style="font-family:'VT323',monospace;font-size:19px;color:#D9C9A7;font-style:italic;max-width:480px;line-height:1.6;margin-bottom:20px">Los partidos que hoy controlan el Congreso llevan años jugando este juego. Ahora te toca a ti.</div>
+
+  <div class="intro-regions">
+    <div class="intro-region"><div class="ir-icon"><img src="gi/mining.png" class="gi" style="width:30px;height:30px;filter:invert(1)" alt=""></div><div class="ir-name" style="color:#E4C067">MINERÍA ILEGAL</div></div>
+    <div class="intro-region"><div class="ir-icon"><img src="gi/chemical-drop.png" class="gi" style="width:30px;height:30px;filter:invert(1)" alt=""></div><div class="ir-name" style="color:#E4C067">NARCOTRÁFICO</div></div>
+    <div class="intro-region"><div class="ir-icon"><img src="gi/pistol-gun.png" class="gi" style="width:30px;height:30px;filter:invert(1)" alt=""></div><div class="ir-name" style="color:#E4C067">EXTORSIÓN</div></div>
+  </div>
+
+  <button id="start-btn" onclick="startGame()">EMPEZAR EL FAENÓN</button>
+</div>
+
+<div id="dilemma-modal"><div class="dilemma-box"><div class="dilemma-title">⚠️ DILEMA</div><div class="dilemma-text" id="dilemma-text"></div><div class="dilemma-opts" id="dilemma-opts"></div></div></div>
+<div id="budget-modal"><div class="budget-box"><h3>★ ARCHIVO PRESUPUESTAL ★</h3><div id="budget-content"></div><button id="budget-close" onclick="closeBudget()">CERRAR</button></div></div>
+<div id="tutorial-overlay"><div class="tut-backdrop" onclick="skipTutorial()"></div><div class="tut-bubble" id="tut-bubble"></div></div>
+
+<div id="game-over">
+  <h1>CAYÓ EL PACTO</h1>
+  <div class="go-sub" id="go-reason"></div>
+  <div class="go-stats" id="go-stats"></div>
+
+  <div class="go-connector">Las leyes que aprobaste son reales.<br>El costo es real. Esto pasa todos los días en el Perú.</div>
+
+  <!-- LP reveal — amarillo, cóndor, invitación -->
+  <div class="go-lp-reveal" style="background:#FFE500;border-radius:8px;padding:24px 20px;margin:24px auto;max-width:420px;text-align:center">
+    <img src="condor-clean.png" alt="Cóndor LP" style="height:80px;margin-bottom:12px">
+    <div style="font-family:'VT323',monospace;font-size:22px;color:#1A1A1A;line-height:1.5">Gino Costa postula al Senado para derrotar contigo al pacto mafioso.</div>
+    <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:#1A1A1A;margin-top:12px;letter-spacing:1px;line-height:1.8">El 12 de abril, marca los 5 cóndores<br>y escribe el 5 en Senado Nacional.</div>
+  </div>
+
+  <div class="go-cta-row">
+    <a href="comovotar.html" target="_blank" class="go-cta">CÓMO VOTAR POR GINO</a>
+    <button class="go-cta-secondary" onclick="startGame()">JUGAR DE NUEVO</button>
+  </div>
+
+  <div class="go-share">
+    Compartir:
+    <a href="#" onclick="shareGame('whatsapp',event);return false">WhatsApp</a> ·
+    <a href="#" onclick="shareGame('x',event);return false">X</a> ·
+    <a href="#" onclick="shareGame('copy',event);return false">Copiar link</a>
+  </div>
+  <div style="margin-top:16px"><button class="go-cta-secondary" onclick="openLeaderboard()">🏆 VER LEADERBOARD</button></div>
+</div>
+
+<div id="leaderboard-modal">
+  <div class="lb-box">
+    <div class="lb-header">
+      <h3>🏆 TOP 20 — PACTO SIMULATOR</h3>
+      <button class="lb-close" onclick="closeLeaderboard()">×</button>
+    </div>
+    <div id="leaderboard-content"><div class="lb-empty">Cargando...</div></div>
+  </div>
+</div>
+
+<div id="top-bar">
+  <div id="game-title">★ PACTO SIMULATOR ★</div>
+  <div class="stat-group">
+    <div class="stat" style="gap:6px"><span style="font-size:20px"><img src="gi/banknote.png" class="gi" style="width:18px;height:18px" alt=""></span><span class="stat-val money" id="money-val" style="font-size:13px;letter-spacing:1px">S/. 0</span></div>
+    <span id="money-detail" style="font-size:13px"></span>
+    <div class="stat"><span><img src="gi/capitol.png" class="gi" style="width:14px;height:14px" alt=""></span><span class="stat-val"  id="power-val">0/130</span></div>
+    <div class="stat"><span class="stat-val"  id="month-val">Ene 2026</span></div>
+  </div>
+</div>
+
+<div id="tab-bar">
+  <div class="tab tab-mineria active" onclick="switchView('mineria')"><span><img src="gi/mining.png" class="gi" alt=""> MINERÍA</span><br><span class="tab-sub">Ilegal</span></div>
+  <div class="tab tab-narco" onclick="switchView('narco')"><span><img src="gi/chemical-drop.png" class="gi" alt=""> NARCO</span><br><span class="tab-sub">Coca</span></div>
+  <div class="tab tab-extorsion" onclick="switchView('extorsion')"><span><img src="gi/pistol-gun.png" class="gi" alt=""> <span class="ext-full">EXTORSIÓN</span><span class="ext-short">EXT</span></span><br><span class="tab-sub">Cobros</span></div>
+  <div class="tab tab-congreso" onclick="switchView('congreso')"><span><img src="gi/capitol.png" class="gi" alt=""> CONGRESO</span><br><span class="tab-sub">El Pacto</span></div>
+</div>
+
+<div id="news-bar"><span class="news-label">NOTICIAS</span><div id="news-content"><span id="news-text">Bienvenido al Pacto Simulator</span></div></div>
+<div id="act-banner"></div>
+
+<div id="main">
+  <div id="scene-wrap"><canvas id="canvas"></canvas><div id="seat-tooltip"></div></div>
+  <div id="side-panel">
+    <div id="drawer-content"></div>
+  </div>
+</div>
+
+<div id="bottom-bar">
+  <div class="threat"><div class="threat-header"><span class="threat-name"><img src="gi/banging-gavel.png" class="gi" alt=""><span class="threat-label-full">FISCALÍA</span><span class="threat-label-short">FISC</span></span><span class="threat-val" id="fiscal-val">5%</span></div><div class="threat-bar-bg"><div class="threat-bar-fill fiscal" id="fiscal-bar" style="transform:scaleX(0.05)"></div></div></div>
+  <div class="threat"><div class="threat-header"><span class="threat-name"><img src="gi/newspaper.png" class="gi" alt=""><span class="threat-label-full">PRENSA</span><span class="threat-label-short">PREN</span></span><span class="threat-val" id="prensa-val">5%</span></div><div class="threat-bar-bg"><div class="threat-bar-fill prensa" id="prensa-bar" style="transform:scaleX(0.05)"></div></div></div>
+  <div class="threat"><div class="threat-header"><span class="threat-name"><img src="gi/uprising.png" class="gi" alt=""><span class="threat-label-full">PUEBLO</span><span class="threat-label-short">PUEB</span></span><span class="threat-val" id="pueblo-val">5%</span></div><div class="threat-bar-bg"><div class="threat-bar-fill pueblo" id="pueblo-bar" style="transform:scaleX(0.05)"></div></div></div>
+  <div class="money-flow-wrap" id="money-flow"></div>
+</div>
+
+<script>
+// =============================================
+// GAME ICON PRELOADER
+// =============================================
+const GI={};
+const GI_NAMES=['mining','chemical-drop','bubbling-flask','airplane','pistol-gun','capitol','banknote','newspaper','uprising','banging-gavel','envelope','hooded-assassin','factory','scroll-unfurled','gold-nuggets','miner','handcuffs','fist','letter-bomb'];
+GI_NAMES.forEach(n=>{const img=new Image();img.src='/gi/'+n+'.png';GI[n]=img;});
+// drawGI: icons are black on transparent. For dark bg scenes, use CSS filter invert on an offscreen canvas.
+const GI_WHITE={};
+function makeWhiteVariant(name){
+  const src=GI[name];if(!src||!src.complete||GI_WHITE[name])return;
+  const c=document.createElement('canvas');c.width=512;c.height=512;
+  const cx=c.getContext('2d');
+  cx.drawImage(src,0,0);
+  cx.globalCompositeOperation='source-in';
+  cx.fillStyle='#fff';cx.fillRect(0,0,512,512);
+  GI_WHITE[name]=c;
+}
+function drawGI(name,x,y,sz,alpha,white){
+  const img=white?(GI_WHITE[name]||null):GI[name];
+  if(!img)return;
+  if(white&&!GI_WHITE[name]){makeWhiteVariant(name);return;}
+  if(!white&&(!GI[name]||!GI[name].complete))return;
+  if(alpha!=null)ctx.globalAlpha=alpha;
+  ctx.drawImage(img,x-sz/2,y-sz/2,sz,sz);
+  if(alpha!=null)ctx.globalAlpha=1;
+}
+
+// =============================================
+// SPRITE PATH HELPER — fallback to /sprites/ when normalized version absent
+// =============================================
+// List populated by scripts/normalize-sprites.mjs (sprites-normalized/processed.json)
+const NORMALIZED_SPRITES=new Set(["obj-aldea.png","obj-anticuchera.png","obj-avioneta.png","obj-banca.png","obj-bandera.png","obj-basura.png","obj-billetes.png","obj-bodega.png","obj-campamento.png","obj-carcel.png","obj-centinela.png","obj-cevicheria.png","obj-cocafield.png","obj-cocalero.png","obj-colegio.png","obj-combi.png","obj-comunidad.png","obj-congresista.png","obj-cono.png","obj-constructora.png","obj-curul.png","obj-deadtree.png","obj-dossier.png","obj-draga.png","obj-drums.png","obj-escombros.png","obj-excavadora.png","obj-farmacia.png","obj-financiera.png","obj-fiscal.png","obj-fiscalia.png","obj-frutero.png","obj-gavel.png","obj-grifo.png","obj-helicoptero.png","obj-hidrante.png","obj-hilux.png","obj-hotel.png","obj-incakola.png","obj-jet.png","obj-lab.png","obj-llantas.png","obj-logo-aa.png","obj-logo-ap.png","obj-logo-app.png","obj-logo-fk.png","obj-logo-pl.png","obj-logo-pp.png","obj-logo-rp.png","obj-logo-sk.png","obj-logo.png","obj-maleta.png","obj-manifestante.png","obj-mansion.png","obj-marcha.png","obj-mercado.png","obj-minero.png","obj-moto.png","obj-mototaxi.png","obj-peluqueria.png","obj-periodista.png","obj-pista.png","obj-pluma.png","obj-pnp.png","obj-podio-congreso.png","obj-poste.png","obj-poza.png","obj-puerto.png","obj-sicario.png","obj-taller.png","obj-taxi.png","obj-tractor.png","obj-transporte.png","obj-tuberias.png"]);
+function SP(name){return NORMALIZED_SPRITES.has(name)?'/sprites-normalized/'+name:'/sprites/'+name;}
+const PROCEDURAL_V2=new URLSearchParams(location.search).get('proceduralV2')==='1';
+const TERRAIN_V2=new URLSearchParams(location.search).get('terrainV2')==='1';
+function TP(name){return'/sprites/terrain-v2/'+name;}
+
+// =============================================
+// PACTO CUSTOM TILESET — 16x16, 1px margin
+// =============================================
+const PT_IMG=new Image();PT_IMG.src='sprites/pacto-custom.png';
+const CT_IMG=new Image();CT_IMG.src='sprites/city.png';
+const BG_MINERIA=new Image();BG_MINERIA.src='sprites/mineria-final.png';
+const BG_NARCO=new Image();BG_NARCO.src='sprites/narco-final.png';
+const BG_CITY=new Image();BG_CITY.src='sprites/city-final.png';
+function drawBg(img){if(!img.complete)return false;ctx.drawImage(img,0,0,W,H);return true;}
+
+// === MIDJOURNEY TERRAIN TEXTURES ===
+const TX_JUNGLE=new Image();TX_JUNGLE.src='sprites/terrain-jungle.png';
+const TX_RIVER=new Image();TX_RIVER.src='sprites/terrain-river.png';
+const TX_STREET=new Image();TX_STREET.src='sprites/terrain-street.png';
+const TX_LATERITE=new Image();TX_LATERITE.src='sprites/terrain-laterite.png';
+// === MIDJOURNEY OBJECT SPRITES ===
+const OBJ_BODEGA=new Image();OBJ_BODEGA.src=SP('obj-bodega.png');
+const OBJ_COMBI=new Image();OBJ_COMBI.src=SP('obj-combi.png');
+const OBJ_MOTOTAXI=new Image();OBJ_MOTOTAXI.src=SP('obj-mototaxi.png');
+const OBJ_DRAGA=new Image();OBJ_DRAGA.src=SP('obj-draga.png');
+const OBJ_SICARIO=new Image();OBJ_SICARIO.src=SP('obj-sicario.png');
+const OBJ_LAB=new Image();OBJ_LAB.src=SP('obj-lab.png');
+const OBJ_COCAFIELD=new Image();OBJ_COCAFIELD.src=SP('obj-cocafield.png');
+const OBJ_AVIONETA=new Image();OBJ_AVIONETA.src=SP('obj-avioneta.png');
+const OBJ_CONGRESISTA=new Image();OBJ_CONGRESISTA.src=SP('obj-congresista.png');
+const OBJ_BILLETES=new Image();OBJ_BILLETES.src=SP('obj-billetes.png');
+const OBJ_MANIFESTANTE=new Image();OBJ_MANIFESTANTE.src=SP('obj-manifestante.png');
+const OBJ_LOGO=new Image();OBJ_LOGO.src=SP('obj-logo.png');
+const OBJ_PISTA=new Image();OBJ_PISTA.src=SP('obj-pista.png');
+const OBJ_CEVICHERIA=new Image();OBJ_CEVICHERIA.src=SP('obj-cevicheria.png');
+const OBJ_FARMACIA=new Image();OBJ_FARMACIA.src=SP('obj-farmacia.png');
+const OBJ_EXCAVADORA=new Image();OBJ_EXCAVADORA.src=SP('obj-excavadora.png');
+const OBJ_CAMPAMENTO=new Image();OBJ_CAMPAMENTO.src=SP('obj-campamento.png');
+const OBJ_HILUX=new Image();OBJ_HILUX.src=SP('obj-hilux.png');
+const OBJ_MINERO=new Image();OBJ_MINERO.src=SP('obj-minero.png');
+const OBJ_COCALERO=new Image();OBJ_COCALERO.src=SP('obj-cocalero.png');
+const OBJ_CENTINELA=new Image();OBJ_CENTINELA.src=SP('obj-centinela.png');
+const OBJ_PERIODISTA=new Image();OBJ_PERIODISTA.src=SP('obj-periodista.png');
+const OBJ_CONSTRUCTORA=new Image();OBJ_CONSTRUCTORA.src=SP('obj-constructora.png');
+const OBJ_POZA=new Image();OBJ_POZA.src=SP('obj-poza.png');
+const OBJ_DEADTREE=new Image();OBJ_DEADTREE.src=SP('obj-deadtree.png');
+const OBJ_TUBERIAS=new Image();OBJ_TUBERIAS.src=SP('obj-tuberias.png');
+const OBJ_PLUMA=new Image();OBJ_PLUMA.src=SP('obj-pluma.png');
+const OBJ_ALDEA=new Image();OBJ_ALDEA.src=SP('obj-aldea.png');
+const OBJ_DRUMS=new Image();OBJ_DRUMS.src=SP('obj-drums.png');
+const OBJ_CURUL=new Image();OBJ_CURUL.src=SP('obj-curul.png');
+const OBJ_BANDERA=new Image();OBJ_BANDERA.src=SP('obj-bandera.png');
+const OBJ_GAVEL=new Image();OBJ_GAVEL.src=SP('obj-gavel.png');
+const OBJ_DOSSIER=new Image();OBJ_DOSSIER.src=SP('obj-dossier.png');
+const OBJ_PNP=new Image();OBJ_PNP.src=SP('obj-pnp.png');
+const OBJ_FISCALIA=new Image();OBJ_FISCALIA.src=SP('obj-fiscalia.png');
+const OBJ_CARCEL=new Image();OBJ_CARCEL.src=SP('obj-carcel.png');
+const OBJ_MALETA=new Image();OBJ_MALETA.src=SP('obj-maleta.png');
+const OBJ_JET=new Image();OBJ_JET.src=SP('obj-jet.png');
+const OBJ_MARCHA=new Image();OBJ_MARCHA.src=SP('obj-marcha.png');
+const OBJ_FISCAL=new Image();OBJ_FISCAL.src=SP('obj-fiscal.png');
+const OBJ_PUERTO=new Image();OBJ_PUERTO.src=SP('obj-puerto.png');
+const OBJ_TRACTOR=new Image();OBJ_TRACTOR.src=SP('obj-tractor.png');
+const OBJ_COMUNIDAD=new Image();OBJ_COMUNIDAD.src=SP('obj-comunidad.png');
+const OBJ_PODIO_CONGRESO=new Image();OBJ_PODIO_CONGRESO.src=SP('obj-podio-congreso.png');
+const OBJ_TRANSPORTE=new Image();OBJ_TRANSPORTE.src=SP('obj-transporte.png');
+const OBJ_COLEGIO=new Image();OBJ_COLEGIO.src=SP('obj-colegio.png');
+const OBJ_GRIFO=new Image();OBJ_GRIFO.src=SP('obj-grifo.png');
+const OBJ_HOTEL=new Image();OBJ_HOTEL.src=SP('obj-hotel.png');
+const OBJ_MERCADO=new Image();OBJ_MERCADO.src=SP('obj-mercado.png');
+const OBJ_TALLER=new Image();OBJ_TALLER.src=SP('obj-taller.png');
+const OBJ_PELUQUERIA=new Image();OBJ_PELUQUERIA.src=SP('obj-peluqueria.png');
+const OBJ_FINANCIERA=new Image();OBJ_FINANCIERA.src=SP('obj-financiera.png');
+const OBJ_ESCOMBROS=new Image();OBJ_ESCOMBROS.src=SP('obj-escombros.png');
+const OBJ_LLANTAS=new Image();OBJ_LLANTAS.src=SP('obj-llantas.png');
+const OBJ_TAXI=new Image();OBJ_TAXI.src=SP('obj-taxi.png');
+const OBJ_INCAKOLA=new Image();OBJ_INCAKOLA.src=SP('obj-incakola.png');
+const OBJ_ANTICUCHERA=new Image();OBJ_ANTICUCHERA.src=SP('obj-anticuchera.png');
+const OBJ_BANCA=new Image();OBJ_BANCA.src=SP('obj-banca.png');
+const OBJ_CONO=new Image();OBJ_CONO.src=SP('obj-cono.png');
+const OBJ_MOTO=new Image();OBJ_MOTO.src=SP('obj-moto.png');
+const OBJ_HIDRANTE=new Image();OBJ_HIDRANTE.src=SP('obj-hidrante.png');
+const OBJ_FRUTERO=new Image();OBJ_FRUTERO.src=SP('obj-frutero.png');
+const OBJ_BASURA=new Image();OBJ_BASURA.src=SP('obj-basura.png');
+const OBJ_POSTE=new Image();OBJ_POSTE.src=SP('obj-poste.png');
+const OBJ_HELICOPTERO=new Image();OBJ_HELICOPTERO.src=SP('obj-helicoptero.png');
+const OBJ_MANSION=new Image();OBJ_MANSION.src=SP('obj-mansion.png');
+const TX_DUST=new Image();TX_DUST.src='sprites/terrain-dust.png';
+const TX_BRICK=new Image();TX_BRICK.src='sprites/terrain-brick.png';
+const TX_PEELING=new Image();TX_PEELING.src='sprites/terrain-peeling.png';
+const TX_SIDEWALK=new Image();TX_SIDEWALK.src='sprites/terrain-sidewalk.png';
+const TX_PARKING=new Image();TX_PARKING.src='sprites/terrain-parking.png';
+const TX_ROOF=new Image();TX_ROOF.src='sprites/terrain-roof.png';
+const TX_GRAFFITI=new Image();TX_GRAFFITI.src='sprites/terrain-graffiti.png';
+const TX_SAND=new Image();TX_SAND.src='sprites/terrain-sand.png';
+const PLATE_MINING_MUD=new Image();PLATE_MINING_MUD.src=TP('mining-mud-plate.png');
+const PLATE_MINING_TOXIC=new Image();PLATE_MINING_TOXIC.src=TP('mining-toxic-pond-plate.png');
+const PLATE_MINING_RIVERBANK=new Image();PLATE_MINING_RIVERBANK.src=TP('mining-riverbank-foreground.jpeg');
+const PLATE_NARCO_COCA=new Image();PLATE_NARCO_COCA.src=TP('narco-coca-field-plate.png');
+const PLATE_NARCO_AIRSTRIP=new Image();PLATE_NARCO_AIRSTRIP.src=TP('narco-airstrip-plate.png');
+const PLATE_NARCO_CLEARING=new Image();PLATE_NARCO_CLEARING.src=TP('narco-jungle-clearing-plate.png');
+const PLATE_URBAN_SIDEWALK=new Image();PLATE_URBAN_SIDEWALK.src=TP('urban-sidewalk-plate.png');
+const PLATE_CONGRESS_MARBLE=new Image();PLATE_CONGRESS_MARBLE.src=TP('congress-marble-floor-plate.png');
+function drawObj(img,x,y,w,h){if(!img||!img.complete)return false;ctx.drawImage(img,x,y,w,h);return true;}
+// drawObjFit: fit sprite in box maintaining aspect ratio, centered
+function drawObjFit(img,x,y,boxW,boxH){
+  if(!img||!img.complete)return false;
+  const r=img.naturalWidth/img.naturalHeight;
+  let w=boxW,h=boxW/r;
+  if(h>boxH){h=boxH;w=boxH*r;}
+  ctx.drawImage(img,x+(boxW-w)/2,y+(boxH-h)/2,w,h);
+  return true;
+}
+function drawObjCover(img,x,y,boxW,boxH,alpha=1,alignBottom=true){
+  if(!img||!img.complete||!img.naturalWidth||!img.naturalHeight)return false;
+  const r=img.naturalWidth/img.naturalHeight;
+  let w=boxW,h=w/r;
+  if(h<boxH){h=boxH;w=h*r;}
+  const dx=x+(boxW-w)/2;
+  const dy=alignBottom?y+boxH-h:y+(boxH-h)/2;
+  if(alpha!==1)ctx.globalAlpha=alpha;
+  ctx.drawImage(img,dx,dy,w,h);
+  if(alpha!==1)ctx.globalAlpha=1;
+  return true;
+}
+function noise2D(x,y,seed=0){
+  const n=Math.sin(x*127.1+y*311.7+seed*74.7)*43758.5453123;
+  return n-Math.floor(n);
+}
+function drawScatterBlots(x,y,w,h,count,colors,seed=0,alpha=0.2){
+  ctx.save();
+  ctx.globalAlpha*=alpha;
+  for(let i=0;i<count;i++){
+    const bx=x+noise2D(i,seed,seed+1)*w;
+    const by=y+noise2D(seed,i,seed+2)*h;
+    const rx=4+noise2D(i,seed+3,seed+4)*18;
+    const ry=2+noise2D(seed+5,i,seed+6)*10;
+    ctx.fillStyle=colors[i%colors.length];
+    ctx.beginPath();ctx.ellipse(bx,by,rx,ry,noise2D(i,seed+7,seed+8)*Math.PI,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+function drawJungleBand(x,y,w,h,seed=0,palette=['#193515','#2B5B23','#4A7A2E'],trunk='#4A2B18'){
+  const step=Math.max(16,Math.floor(w/12));
+  for(let i=0;i<=Math.ceil(w/step);i++){
+    const px=x+i*step+noise2D(i,seed,1)*step*0.4;
+    const baseY=y+h*0.92;
+    const trunkH=h*(0.18+noise2D(i,seed,2)*0.36);
+    const crown=8+h*(0.18+noise2D(i,seed,3)*0.25);
+    ctx.fillStyle=trunk;
+    ctx.fillRect(px-1,baseY-trunkH,2,Math.max(8,trunkH));
+    for(let c=0;c<3;c++){
+      ctx.fillStyle=palette[(i+c)%palette.length];
+      ctx.beginPath();
+      ctx.ellipse(px+(c-1)*crown*0.28,baseY-trunkH+(c===0?2:-crown*0.08),crown*(0.7-c*0.08),crown*(0.42-c*0.04),0,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+}
+// Cached patterns (created once after image loads)
+const _patterns={};
+function getPattern(img,key){
+  if(!img||!img.complete)return null;
+  if(_patterns[key])return _patterns[key];
+  _patterns[key]=ctx.createPattern(img,'repeat');
+  return _patterns[key];
+}
+// Fill area with a tiled texture
+function fillTex(img,key,x,y,w,h){
+  const p=getPattern(img,key);
+  if(!p){ctx.fillStyle='#444';ctx.fillRect(x,y,w,h);return false;}
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle=p;
+  ctx.fillRect(0,0,w,h);
+  ctx.restore();
+  return true;
+}
+// Tinted overlay on top of texture for damage/contamination etc
+function tintRect(x,y,w,h,color){
+  ctx.fillStyle=color;
+  ctx.fillRect(x,y,w,h);
+}
+const PT_SZ=16,PT_M=1;
+function ct(col,row,x,y,scale){
+  if(!CT_IMG.complete)return false;
+  const sx=col*(PT_SZ+PT_M),sy=row*(PT_SZ+PT_M);
+  ctx.drawImage(CT_IMG,sx,sy,PT_SZ,PT_SZ,x,y,PT_SZ*scale,PT_SZ*scale);
+  return true;
+}
+function ctFill(col,row,x,y,w,h,scale){
+  if(!CT_IMG.complete)return;
+  const s=PT_SZ*scale,sx=col*(PT_SZ+PT_M),sy=row*(PT_SZ+PT_M);
+  for(let ty=y;ty<y+h;ty+=s)for(let tx=x;tx<x+w;tx+=s){
+    const dw=Math.min(s,x+w-tx),dh=Math.min(s,y+h-ty);
+    ctx.drawImage(CT_IMG,sx,sy,PT_SZ*(dw/s),PT_SZ*(dh/s),tx,ty,dw,dh);
+  }
+}
+// City tile map [col,row] in city.png (16x12 grid)
+const C={
+  brkTL:[0,0],brkTR:[1,0],brkBL:[2,0],brkBR:[3,0],brkM:[4,0],brkWin:[6,0],
+  conTL:[0,1],conTR:[1,1],conBL:[2,1],conBR:[3,1],conM:[4,1],conWin:[5,1],
+  bgTL:[6,1],bgTR:[7,1],bgM:[8,1],bgWin:[9,1],
+  glTL:[0,2],glTR:[1,2],glBL:[2,2],glBR:[3,2],grn:[4,2],grnDoor:[5,2],
+  doorBrn:[6,2],doorGry:[8,2],
+  awnGL:[0,3],awnGM:[1,3],awnGR:[3,3],awnOL:[4,3],awnOM:[5,3],awnOR:[7,3],
+  toldoO:[8,3],toldoG:[9,3],
+  signTeal:[0,4],signOrng:[1,4],bottles:[4,4],
+  swM:[4,5],swT:[1,5],swB:[7,5],
+  road:[0,6],roadYH:[3,6],roadYV:[5,6],crossH:[9,6],
+  tree1:[0,7],tree2:[1,7],tree3:[2,7],tree4:[3,7],
+  lamp:[7,7],semaforo:[6,7],trash:[10,7],
+  carGTL:[0,8],carGTR:[1,8],carOFL:[3,8],carOFR:[4,8],
+};
+// pt(col,row, x,y, scale) — draw one 16x16 tile scaled
+function pt(col,row,x,y,scale){
+  if(!PT_IMG.complete)return false;
+  const sx=col*(PT_SZ+PT_M),sy=row*(PT_SZ+PT_M);
+  ctx.drawImage(PT_IMG,sx,sy,PT_SZ,PT_SZ,x,y,PT_SZ*scale,PT_SZ*scale);
+  return true;
+}
+// ptFill(col,row, x,y, w,h, scale) — tile-fill an area
+function ptFill(col,row,x,y,w,h,scale){
+  if(!PT_IMG.complete)return;
+  const s=PT_SZ*scale,sx=col*(PT_SZ+PT_M),sy=row*(PT_SZ+PT_M);
+  for(let ty=y;ty<y+h;ty+=s)for(let tx=x;tx<x+w;tx+=s){
+    const dw=Math.min(s,x+w-tx),dh=Math.min(s,y+h-ty);
+    ctx.drawImage(PT_IMG,sx,sy,PT_SZ*(dw/s),PT_SZ*(dh/s),tx,ty,dw,dh);
+  }
+}
+// Tile map — [col,row] in pacto-custom.png
+const P={
+  // Row 0: Jungle
+  canopy:[0,0],tree:[1,0],palm:[2,0],bush:[3,0],jungleFloor:[4,0],vegDense:[5,0],
+  // Row 1: Water
+  waterClean:[0,1],waterDirty:[1,1],waterMerc:[2,1],riverBank:[3,1],sediment:[4,1],
+  // Row 2: Deforestation
+  moonscape:[0,2],deadTree:[1,2],laterite:[2,2],gravel:[3,2],excavator:[4,2],
+  // Row 3: Shanty
+  shackZinc:[0,3],shackTarp:[1,3],cantina:[2,3],fuelDrum:[3,3],generator:[4,3],
+  // Row 4: Draga parts
+  deckWood:[0,4],pontoon:[1,4],hose:[2,4],motorPump:[3,4],sluice:[4,4],
+  // Row 5: Characters
+  minero:[0,5],cocalero:[1,5],sicario:[2,5],congresista:[3,5],comerciante:[4,5],
+  // Row 6: Narco
+  cocaPlant:[0,6],labShack:[1,6],avioneta:[2,6],cocaField:[3,6],
+  // Row 7: City
+  bodega:[0,7],mototaxi:[1,7],streetLamp:[2,7],
+};
+
+// =============================================
+// PARTIES & LAWS
+// =============================================
+const PARTIES = [
+  {name:'Fuerza Kongresal',real:'Fuerza Popular',leader:'La Heredera',color:'#FFA300',bg:'rgba(255,102,0,.15)',icon:'🟠',badge:'K',badgeColor:'#000',logo:SP('obj-logo-fk.png')},
+  {name:'Relegación Popular',real:'Renovación Popular',leader:'El Porky',color:'#29ADFF',bg:'rgba(135,206,235,.12)',icon:'🔵',badge:'R',badgeColor:'#fff',logo:SP('obj-logo-rp.png')},
+  {name:'Alianza Para el Provecho',real:'APP',leader:'El Billetazo',color:'#FF004D',bg:'rgba(204,0,0,.12)',icon:'🔴',badge:'A',badgeColor:'#4477CC',logo:SP('obj-logo-app.png')},
+  {name:'Podemos Comprarte',real:'Podemos Perú',leader:'El Negociante',color:'#4477CC',bg:'rgba(68,119,204,.12)',icon:'🔵',badge:'P',badgeColor:'#fff',logo:SP('obj-logo-pp.png')},
+  {name:'Perú Lápiz',real:'Perú Libre',leader:'El Prófugo',color:'#DD2222',bg:'rgba(200,0,0,.12)',icon:'✏️',badge:'L',badgeColor:'#fff',logo:SP('obj-logo-pl.png')},
+  {name:'Acción Pendular',real:'Acción Popular',leader:'El Zombie',color:'#CC3333',bg:'rgba(204,51,51,.1)',icon:'🪏',badge:'AP',badgeColor:'#fff',logo:SP('obj-logo-ap.png')},
+  {name:'Avanza Avanza',real:'Avanza País',leader:'El Intelectual',color:'#4477CC',bg:'rgba(21,63,149,.15)',icon:'🚅',badge:'AA',badgeColor:'#fff',logo:SP('obj-logo-aa.png')},
+  {name:'Somos Kokoro',real:'Somos Perú',leader:'Sin Corazón',color:'#FF4444',bg:'rgba(255,68,68,.1)',icon:'💔',badge:'SK',badgeColor:'#fff',logo:SP('obj-logo-sk.png')},
+];
+// Preload party logos
+const PARTY_LOGOS={};
+PARTIES.forEach(p=>{const img=new Image();img.src=p.logo;PARTY_LOGOS[p.logo]=img;});
+
+const LAWS = {
+  reinfo:     {name:'Extensión REINFO',          num:'Ley 32537',           desc:'5ta extensión del registro minero. Escudo legal para oro sucio hasta 2026.',                      fiscalD:8,  prensaU:3, puebloU:2, need:10},
+  extincion:  {name:'Liberación de Bienes',      num:'Ley 32326',           desc:'Modifica el DL 1373: ahora necesitas sentencia firme antes de incautar. El narco respira.',         fiscalD:12, prensaU:8, puebloU:5, need:15},
+  fiscalia:   {name:'Operación Mordaza',         num:'Ley 32181',           desc:'Adiós detención preliminar sin flagrancia. Ningún fiscal puede tocar al pacto sin pillarlos in fraganti.', fiscalD:15, prensaU:10,puebloU:8, need:18},
+  tc:         {name:'El Tribunal Amigo',         num:'Res. Leg. 001-2022-CR',desc:'Elección express de 6 magistrados afines. Las leyes ya no se tumban.',                              fiscalD:10, prensaU:12,puebloU:6, need:20},
+  confianza:  {name:'Ley Antiplebiscito',        num:'Ley 31399',           desc:'Restringe cuestión de confianza Y referéndum. Ni el Ejecutivo ni el pueblo pueden tocar al Congreso.', fiscalD:5,  prensaU:6, puebloU:10,need:22},
+  colaboracion:{name:'La Ley Mordaza',           num:'Ley 31990',           desc:'8 meses para que un colaborador eficaz hable o se cae el caso. Los delatores ya no hunden al pacto.', fiscalD:14, prensaU:5, puebloU:3, need:12},
+  crimen:     {name:'Pro-Crimen',                num:'Ley 32108',           desc:'Redefine organización criminal. 59 de 91 delitos quedan fuera. Las redes congresales son atípicas.',  fiscalD:10, prensaU:4, puebloU:2, need:14},
+  antejuicio: {name:'Subcomisión Tumba-todo',    num:'Art. 89 Reglamento',  desc:'Toda denuncia constitucional pasa por aquí. Aquí mueren. Congresistas intocables hasta 5 años después.', fiscalD:8,  prensaU:7, puebloU:5, need:14},
+};
+
+// =============================================
+// STATE
+// =============================================
+const G = {
+  money:80000, month:0, running:false,
+  fiscal:5, prensa:5, pueblo:5,
+  mines:[], cocaFields:[], labs:[], routes:[],
+  blocks:[], sicarios:0, laundering:0,
+  seats:[], judges:0, media:0,
+  lawsPassed:{},
+  fiscalFired:false,
+  lastIncome:0, lastExpense:0, totalStolen:0, monthsAlive:0,
+  delayedEffects:[],
+  flyingEnvelopes:[], // {x,y,targetX,targetY,progress}
+  particles:[],
+};
+const MONTHS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const BIZ=[
+  {icon:'🏪',name:'Bodega',inc:800},{icon:'🍽️',name:'Restaurante',inc:1200},{icon:'🏗️',name:'Constructora',inc:2500},
+  {icon:'🏥',name:'Farmacia',inc:1000},{icon:'🚌',name:'Transporte',inc:1500},{icon:'🏫',name:'Colegio',inc:900},
+  {icon:'⛽',name:'Grifo',inc:1800},{icon:'🏨',name:'Hotel',inc:2000},{icon:'🛒',name:'Mercado',inc:1100},
+  {icon:'🔧',name:'Taller',inc:700},{icon:'💈',name:'Peluquería',inc:500},{icon:'🏦',name:'Financiera',inc:3000},
+];
+const MINE_NAMES=['Madre de Dios','Puno','Cusco','Arequipa','Apurímac','Piura','La Libertad','Cajamarca','Ayacucho','Huancavelica','Loreto','Junín'];
+
+// =============================================
+// CANVAS
+// =============================================
+let canvas,ctx,W,H,dpr;
+let currentView='mineria';
+let animFrame=0;
+let renderId=0;
+let canvasBound=false;
+let congresoGrid=null;
+
+function initCanvas(){
+  canvas=document.getElementById('canvas');ctx=canvas.getContext('2d');
+  dpr=Math.min(window.devicePixelRatio||1,2);
+  resizeCanvas();
+  requestAnimationFrame(()=>{resizeCanvas();});
+  setTimeout(resizeCanvas,100);
+  if(!canvasBound){
+    window.addEventListener('resize',resizeCanvas,{passive:true});
+    window.addEventListener('orientationchange',()=>{setTimeout(resizeCanvas,150);},{passive:true});
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden&&G.running&&!renderId)renderId=requestAnimationFrame(renderLoop);});
+    canvasBound=true;
+  }
+}
+function resizeCanvas(){
+  const wr=document.getElementById('scene-wrap');
+  const w=wr.clientWidth,h=wr.clientHeight;
+  canvas.width=w*dpr;canvas.height=h*dpr;
+  canvas.style.width=w+'px';canvas.style.height=h+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;ctx.imageSmoothingEnabled=false;
+}
+
+
+// =============================================
+// PARTICLE SYSTEM (capped at 100)
+// =============================================
+function spawnParticle(x,y,vx,vy,life,color,size){
+  const cap=W<430?40:100;
+  if(G.particles.length>=cap)return;
+  G.particles.push({x,y,vx,vy,life,maxLife:life,color,size:size||2});
+}
+function updateParticles(){
+  for(let i=G.particles.length-1;i>=0;i--){
+    const p=G.particles[i];
+    p.x+=p.vx;p.y+=p.vy;p.life--;
+    if(p.life<=0)G.particles.splice(i,1);
+  }
+}
+function drawParticles(){
+  G.particles.forEach(p=>{
+    const a=p.life/p.maxLife;
+    ctx.globalAlpha=a;ctx.fillStyle=p.color;
+    ctx.fillRect(p.x,p.y,p.size,p.size);
+  });
+  ctx.globalAlpha=1;
+}
+
+// =============================================
+// PIXEL ART — outlined characters
+// =============================================
+const S=5;
+function oRect(x,y,w,h,color){
+  ctx.fillStyle='#000';ctx.fillRect(x-1,y-1,w+2,h+2);
+  ctx.fillStyle=color;ctx.fillRect(x,y,w,h);
+}
+function lighter(hex,amt){
+  let r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  r=Math.min(255,r+amt);g=Math.min(255,g+amt);b=Math.min(255,b+amt);
+  return`rgb(${r},${g},${b})`;
+}
+function darker(hex,amt){return lighter(hex,-amt);}
+
+// Neon outline helper for chicha characters
+function neonRect(x,y,w,h,color,glowColor){
+  ctx.shadowColor=glowColor||color;ctx.shadowBlur=4;
+  ctx.strokeStyle=color;ctx.lineWidth=1;
+  ctx.strokeRect(x,y,w,h);
+  ctx.shadowBlur=0;
+}
+
+function drawPerson(x,y,skin,body,legs,sc,frame){
+  const s=S*sc, bob=Math.sin(frame*0.12)*s*0.3;
+  const fy=y;
+  ctx.fillStyle='rgba(0,0,0,0.15)';
+  ctx.beginPath();ctx.ellipse(x,fy+s*0.3,s*3.5,s,0,0,Math.PI*2);ctx.fill();
+  const legSpread=Math.sin(frame*0.15)*s*0.7;
+  oRect(x-s*1.3+legSpread, fy-s*4, s*1.8, s*4, legs);
+  oRect(x+s*0.1-legSpread, fy-s*4, s*1.8, s*4, legs);
+  oRect(x-s*1.5+legSpread, fy-s*0.8, s*2.2, s*1, '#000000');
+  oRect(x-s*0.1-legSpread, fy-s*0.8, s*2.2, s*1, '#000000');
+  const bt=fy-s*4-s*5+bob;
+  oRect(x-s*2.5, bt, s*5, s*5.2, body);
+  ctx.fillStyle=lighter(body,25);
+  ctx.fillRect(x-s*2.3, bt+s*0.5, s*1.5, s*4);
+  const arm=Math.sin(frame*0.13)*s*1;
+  oRect(x-s*4, bt+s*0.5+arm, s*1.5, s*4, body);
+  oRect(x+s*2.5, bt+s*0.5-arm, s*1.5, s*4, body);
+  oRect(x-s*4, bt+s*4.3+arm, s*1.5, s*1.2, skin);
+  oRect(x+s*2.5, bt+s*4.3-arm, s*1.5, s*1.2, skin);
+  oRect(x-s*0.8, bt-s*0.8, s*1.6, s*1.2, skin);
+  const ht=bt-s*4.5;
+  oRect(x-s*2.2, ht, s*4.4, s*4.2, skin);
+  ctx.fillStyle=darker(skin,40);
+  ctx.fillRect(x-s*2.2, ht, s*4.4, s*0.8);
+  oRect(x-s*1.4, ht+s*1.4, s*1.2, s*1, '#fff');
+  oRect(x+s*0.2, ht+s*1.4, s*1.2, s*1, '#fff');
+  ctx.fillStyle='#111';
+  ctx.fillRect(x-s*1, ht+s*1.5, s*0.7, s*0.8);
+  ctx.fillRect(x+s*0.5, ht+s*1.5, s*0.7, s*0.8);
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.fillRect(x-s*1, ht+s*1.5, s*0.3, s*0.3);
+  ctx.fillRect(x+s*0.5, ht+s*1.5, s*0.3, s*0.3);
+  ctx.fillStyle='#833';ctx.fillRect(x-s*0.5, ht+s*3, s*1, s*0.4);
+  return ht;
+}
+
+function drawMiner(x,y,frame){
+  const ht=drawPerson(x,y,'#FFCCAA','#665522','#443311',1.1,frame);
+  const s=S*1.1;
+  oRect(x-s*2.8, ht-s*0.5, s*5.6, s*1.5, '#FFEC27');
+  oRect(x-s*2, ht-s*1.8, s*4, s*1.5, '#FFEC27');
+  ctx.fillStyle='#FFF';ctx.fillRect(x-s*0.5,ht-s*2.2,s*1,s*0.8);
+  ctx.save();ctx.translate(x+s*3.5,y-s*6);ctx.rotate(Math.sin(frame*0.08)*0.4-0.3);
+  oRect(-s*0.4,-s*6,s*0.8,s*7,'#8B4513');
+  oRect(-s*1.5,-s*7,s*3.5,s*1.5,'#999');
+  ctx.restore();
+  if(animFrame%3===0)spawnParticle(x-10+Math.random()*20,y-40,Math.random()*2-1,-1-Math.random(),25,'rgba(255,229,0,0.8)',3);
+}
+
+function drawCocalero(x,y,frame){
+  const ht=drawPerson(x,y,'#FFCCAA','#008751','#AB5236',1,frame);
+  const s=S;
+  oRect(x-s*3.5,ht-s*0.3,s*7,s*1,'#FFA300');
+  oRect(x-s*2.2,ht-s*2.5,s*4.4,s*2.5,'#FFA300');
+  ctx.fillStyle='#AB5236';ctx.fillRect(x-s*2.2,ht-s*0.3,s*4.4,s*0.6);
+  ctx.save();ctx.translate(x+s*3,y-s*5);ctx.rotate(-0.3+Math.sin(frame*0.1)*0.2);
+  oRect(0,-s*4,s*0.6,s*5,'#bbb');oRect(-s*0.3,s*0.5,s*1.2,s*2,'#654');
+  ctx.restore();
+}
+
+function drawLabWorker(x,y,frame){
+  const ht=drawPerson(x,y,'#FFCCAA','#ddd','#555',0.9,frame);
+  const s=S*0.9;
+  ctx.fillStyle='rgba(57,255,20,0.4)';
+  ctx.fillRect(x-s*2,ht+s*1.2,s*1.5,s*1);ctx.fillRect(x+s*0.5,ht+s*1.2,s*1.5,s*1);
+  ctx.strokeStyle='#555';ctx.lineWidth=1;
+  ctx.strokeRect(x-s*2,ht+s*1.2,s*1.5,s*1);ctx.strokeRect(x+s*0.5,ht+s*1.2,s*1.5,s*1);
+  oRect(x-s*1.5,ht+s*2.5,s*3,s*1.3,'#ccc');
+  ctx.save();ctx.translate(x+s*3.5,y-s*7);
+  oRect(-s*0.8,-s*3,s*1.6,s*3,'rgba(57,255,20,0.4)');
+  oRect(-s*1.2,-s*3.5,s*2.4,s*0.8,'#888');
+  if(animFrame%5===0)spawnParticle(x+s*3.5-3,y-s*10-Math.random()*5,Math.random()-0.5,-0.8,15,'rgba(57,255,20,0.6)',2);
+  ctx.restore();
+}
+
+function drawExtortionist(x,y,frame){
+  const s=S*1.15,bob=Math.sin(frame*0.12)*s*0.3,fy=y;
+  ctx.fillStyle='rgba(0,0,0,0.15)';ctx.beginPath();ctx.ellipse(x,fy+s*0.3,s*3.5,s,0,0,Math.PI*2);ctx.fill();
+  const legSpread=Math.sin(frame*0.15)*s*0.7;
+  oRect(x-s*1.3+legSpread,fy-s*4,s*1.8,s*4,'#000000');
+  oRect(x+s*0.1-legSpread,fy-s*4,s*1.8,s*4,'#000000');
+  oRect(x-s*1.5+legSpread,fy-s*0.8,s*2.2,s*1,'#111');
+  oRect(x-s*0.1-legSpread,fy-s*0.8,s*2.2,s*1,'#111');
+  const bt=fy-s*9+bob;
+  oRect(x-s*2.5,bt,s*5,s*5.2,'#000000');
+  oRect(x-s*2.5,bt-s*4.5,s*5,s*5,'#111');
+  ctx.fillStyle='#FFCCAA';ctx.fillRect(x-s*1.5,bt-s*2.5,s*3,s*1);
+  oRect(x-s*1.2,bt-s*2.3,s*0.9,s*0.6,'#fff');
+  oRect(x+s*0.3,bt-s*2.3,s*0.9,s*0.6,'#fff');
+  ctx.fillStyle='#a00';ctx.fillRect(x-s*0.9,bt-s*2.2,s*0.5,s*0.5);
+  ctx.fillRect(x+s*0.5,bt-s*2.2,s*0.5,s*0.5);
+  const arm=Math.sin(frame*0.13)*s*1;
+  oRect(x-s*4,bt+s*0.5+arm,s*1.5,s*4,'#111');
+  oRect(x+s*2.5,bt+s*0.5-arm,s*1.5,s*4,'#111');
+  oRect(x+s*2.3,bt+s*4-arm,s*3,s*1,'#444');
+  oRect(x+s*4.5,bt+s*3-arm,s*0.8,s*2,'#333');
+  if(animFrame%40<3){
+    ctx.fillStyle='rgba(255,200,50,0.6)';
+    ctx.beginPath();ctx.arc(x+s*5.5,bt+s*4-arm,s*1.5,0,Math.PI*2);ctx.fill();
+  }
+}
+
+function drawShopkeeper(x,y,scared,frame){
+  const ht=drawPerson(x,y,'#FFCCAA',scared?'#886644':'#4466aa','#334',0.85,frame);
+  const s=S*0.85;
+  if(scared){
+    ctx.strokeStyle='rgba(255,0,0,0.6)';ctx.lineWidth=1.5;
+    for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(x-s*5,ht+i*s*2);ctx.lineTo(x-s*6.5,ht+i*s*2);ctx.stroke();}
+    ctx.fillStyle='rgba(0,255,255,0.7)';
+    ctx.beginPath();ctx.arc(x+s*3,ht+s*1+(animFrame%20)*0.5,s*0.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#FF0000';ctx.font=`bold ${s*3}px "Press Start 2P"`;ctx.textAlign='center';
+    ctx.fillText('!',x,ht-s*1.5);ctx.textAlign='left';
+  } else {
+    oRect(x-s*2,y-s*8,s*4,s*3,'#fff');
+  }
+}
+
+// Congresista as tiny drawn character at 0.35 scale
+function drawCongresista(x,y,partyColor,bought,frame){
+  const sc=0.35, s=S*sc;
+  // Tiny character
+  if(!bought){
+    // Unbought: gray silhouette
+    ctx.fillStyle='#C0B8D0';
+    ctx.fillRect(x-s*2,y-s*8,s*4,s*4); // head
+    ctx.fillRect(x-s*2.5,y-s*4,s*5,s*5); // body
+    ctx.fillRect(x-s*1.5,y+s*1,s*1.5,s*3); // legs
+    ctx.fillRect(x,y+s*1,s*1.5,s*3); // legs
+    return;
+  }
+  // Bought: party-colored body with golden glow
+  if(bought){
+    ctx.shadowColor='#FFEC27';ctx.shadowBlur=4;
+  }
+  // Head (skin)
+  ctx.fillStyle='#FFCCAA';
+  ctx.fillRect(x-s*2,y-s*9,s*4,s*3.5);
+  // Body (party color)
+  ctx.fillStyle=partyColor;
+  ctx.fillRect(x-s*2.5,y-s*5.5,s*5,s*4.5);
+  // Legs
+  ctx.fillStyle='#333';
+  ctx.fillRect(x-s*1.5,y-s*1,s*1.5,s*3);
+  ctx.fillRect(x,y-s*1,s*1.5,s*3);
+  // Eyes
+  ctx.fillStyle='#fff';
+  ctx.fillRect(x-s*1.2,y-s*7.5,s*1,s*0.8);
+  ctx.fillRect(x+s*0.2,y-s*7.5,s*1,s*0.8);
+  ctx.fillStyle='#111';
+  ctx.fillRect(x-s*0.8,y-s*7.3,s*0.5,s*0.5);
+  ctx.fillRect(x+s*0.5,y-s*7.3,s*0.5,s*0.5);
+  ctx.shadowBlur=0;
+}
+
+// =============================================
+// ENVIRONMENT — chicha palette (light mode)
+// =============================================
+function drawMountainRange(baseY,h1,h2,color){
+  ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(-10,baseY);
+  for(let x=0;x<W+40;x+=40){
+    const peak=baseY-h1-Math.sin(x*0.008+0.5)*h2-Math.sin(x*0.02)*h2*0.3;
+    ctx.lineTo(x,peak);ctx.lineTo(x+20,peak+h2*0.3);
+  }
+  ctx.lineTo(W+10,baseY);ctx.closePath();ctx.fill();
+}
+function drawSnowCaps(baseY,h1,h2){
+  ctx.fillStyle='rgba(255,255,255,0.6)';ctx.beginPath();let s=false;
+  for(let x=0;x<W+40;x+=40){
+    const pk=baseY-h1-Math.sin(x*0.008+0.5)*h2-Math.sin(x*0.02)*h2*0.3;
+    if(pk<baseY-h1+10){if(!s){ctx.moveTo(x,pk);s=true;}else ctx.lineTo(x,pk);ctx.lineTo(x+10,pk+6);}
+  }
+  if(s)ctx.fill();
+}
+function drawRiver(ry,w,contam){
+  const grd=ctx.createLinearGradient(0,ry,0,ry+w);
+  if(contam){grd.addColorStop(0,'rgba(255,102,0,0.6)');grd.addColorStop(1,'rgba(200,80,0,0.4)');}
+  else{grd.addColorStop(0,'rgba(60,160,200,0.5)');grd.addColorStop(1,'rgba(40,120,160,0.4)');}
+  ctx.fillStyle=grd;ctx.beginPath();ctx.moveTo(-5,ry);
+  for(let x=0;x<=W+10;x+=12)ctx.lineTo(x,ry+Math.sin(x*0.015+animFrame*0.06)*5);
+  ctx.lineTo(W+5,ry+w);
+  for(let x=W+5;x>=-5;x-=12)ctx.lineTo(x,ry+w+Math.sin(x*0.02+animFrame*0.04)*3);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=contam?'rgba(255,102,0,0.3)':'rgba(60,160,200,0.2)';
+  for(let x=20;x<W;x+=50){ctx.fillRect(x+Math.sin(animFrame*0.04+x*0.1)*8,ry+w*0.4,10,2);}
+  if(contam){ctx.fillStyle='rgba(200,200,200,0.3)';for(let x=80;x<W;x+=180){ctx.beginPath();ctx.ellipse(x,ry+w*0.4,7,3,0.3,0,Math.PI*2);ctx.fill();}}
+}
+function drawJungleTree(x,y,sz){
+  ctx.fillStyle='#AB5236';ctx.fillRect(x-sz*0.12,y-sz*0.2,sz*0.24,sz*0.4);
+  ['#00E436','#00E436','#008751'].forEach((c,i)=>{
+    ctx.fillStyle=c;ctx.beginPath();
+    ctx.arc(x+Math.sin(i*2)*sz*0.15,y-sz*0.25-i*sz*0.2,sz*(0.45-i*0.07)+Math.sin(animFrame*0.02+x)*1.5,0,Math.PI*2);ctx.fill();
+  });
+  // Leaf highlights
+  ctx.fillStyle='rgba(80,200,40,0.15)';ctx.beginPath();
+  ctx.arc(x,y-sz*0.3,sz*0.5,0,Math.PI*2);ctx.fill();
+}
+function drawCityBuilding(x,y,w,h,color){
+  ctx.fillStyle=color;ctx.fillRect(x,y-h,w,h);
+  const ww=w*0.12,wh=h*0.05,gx=w*0.06,gy=h*0.04;
+  const cols=Math.floor((w-gx*2)/(ww+gx)),rows=Math.floor((h-gy*4)/(wh+gy));
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+    const on=Math.sin(r*3+c*7+x*0.1+animFrame*0.01)>-0.2;
+    ctx.fillStyle=on?'rgba(120,180,220,0.4)':'rgba(80,60,50,0.15)';
+    ctx.fillRect(x+gx*2+c*(ww+gx),y-h+gy*3+r*(wh+gy),ww,wh);
+  }
+  ctx.fillStyle='rgba(0,0,0,0.1)';ctx.fillRect(x-1,y-h-2,w+2,4);
+}
+
+// =============================================
+// SCENE: MINERIA — Dragas en el río
+// =============================================
+function renderMineria(){
+  const mob=W<500,fs=mob?10:13;
+  // === MIDJOURNEY TILE PATTERN VERSION ===
+  if(!PROCEDURAL_V2 && TX_JUNGLE.complete && TX_RIVER.complete){
+    const rivTop=H*0.2,rivBot=H*0.75,rivH=rivBot-rivTop;
+    const hasMerc=G.mines.filter(m=>m.mercury).length>0;
+    const mineCount=G.mines.length;
+    const deforestPct=Math.min(mineCount/6,1);
+    // Top jungle (shrinks with deforestation)
+    const jungleW=W*(1-deforestPct*0.6);
+    fillTex(TX_JUNGLE,'jungle',0,0,jungleW,rivTop);
+    // Deforested zone (laterite) on right
+    if(deforestPct>0 && TX_LATERITE.complete){
+      fillTex(TX_LATERITE,'lat',jungleW,0,W-jungleW,rivTop);
+      ctx.strokeStyle='rgba(0,40,0,0.6)';ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(jungleW,0);ctx.lineTo(jungleW,rivTop);ctx.stroke();
+      // Pozas + dead trees + tuberias
+      const numDetails=Math.floor(deforestPct*4);
+      for(let d=0;d<numDetails;d++){
+        const dx=jungleW+10+d*((W-jungleW-20)/numDetails);
+        const dy=10+(d%2)*30;
+        if(d%3===0){
+          const pW=mob?20:28,pH=pW*61/80;
+          drawObj(OBJ_POZA,dx,dy,pW,pH);
+        }else if(d%3===1){
+          const tW=mob?14:20,tH=tW;
+          drawObj(OBJ_DEADTREE,dx,dy,tW,tH);
+        }else{
+          const tbW=mob?16:24,tbH=tbW;
+          drawObj(OBJ_TUBERIAS,dx,dy,tbW,tbH);
+        }
+      }
+    }
+    // River (mineria contaminates over time)
+    fillTex(TX_RIVER,'river',0,rivTop,W,rivH);
+    // Mercury overlay (orange iridescent tint)
+    if(hasMerc){
+      ctx.fillStyle='rgba(255,140,0,0.18)';
+      ctx.fillRect(0,rivTop,W,rivH);
+      // Iridescent patches
+      for(let s=0;s<5;s++){
+        const sx=(s*W*0.22+animFrame*0.3)%W,sy=rivTop+(s*rivH*0.2);
+        ctx.fillStyle='rgba(60,180,200,0.12)';
+        ctx.beginPath();ctx.ellipse(sx,sy+rivH/2,30,8,0,0,Math.PI*2);ctx.fill();
+      }
+    }
+    // Bottom jungle (with camps)
+    fillTex(TX_JUNGLE,'jungle',0,rivBot,W,H-rivBot);
+    if(TERRAIN_V2){
+      const miningPlateW=W*Math.max(deforestPct*0.65,0.38);
+      const miningPlateX=W-miningPlateW;
+      const topPlate=hasMerc&&PLATE_MINING_TOXIC.complete?PLATE_MINING_TOXIC:PLATE_MINING_MUD;
+      drawObjCover(topPlate,miningPlateX,0,miningPlateW,rivTop+14,0.96,true);
+      drawObjCover(PLATE_MINING_RIVERBANK,0,rivBot-6,W,H-rivBot+18,0.92,true);
+    }
+    // === DRAGAS (procedural on top of river) ===
+    const act=G.mines.filter(m=>m.active),maxV=Math.min(act.length,5),sp=W/(maxV+1);
+    for(let i=0;i<maxV;i++){
+      const mine=act[i];
+      const bx=sp*(i+1),bob=Math.sin(animFrame*0.04+i*1.5)*3;
+      const by=rivTop+rivH*0.25+bob+(i%3)*rivH*0.18;
+      const bW=mine.upgraded?(mob?44:60):(mob?32:44);
+      const bH=mine.upgraded?(mob?16:22):(mob?12:16);
+      // Sediment plume downstream
+      ctx.fillStyle='rgba(196,162,101,0.35)';
+      ctx.beginPath();
+      ctx.moveTo(bx-bW*0.2,by+bH);
+      ctx.lineTo(bx+bW*1.5,by+bH+rivH*0.12);
+      ctx.lineTo(bx+bW*1.8,by+bH+rivH*0.2);
+      ctx.lineTo(bx-bW*0.4,by+bH+rivH*0.06);
+      ctx.closePath();ctx.fill();
+      // === DRAGA SPRITE (Midjourney) ===
+      const dW=mine.upgraded?(mob?70:90):(mob?52:72);
+      const dH=dW*114/200; // aspect ratio
+      const drawn=drawObj(OBJ_DRAGA,bx-dW/2,by-dH*0.4,dW,dH);
+      if(!drawn){
+        // Procedural fallback
+        ctx.fillStyle='#8D6E63';ctx.fillRect(bx-bW/2,by,bW,bH);
+        ctx.fillStyle='#90A4AE';ctx.fillRect(bx-bW*0.25,by-12,bW*0.5,12);
+      }
+      // Excavadora on upgraded mines
+      if(mine.upgraded){
+        const exW=mob?20:28,exH=exW;
+        drawObj(OBJ_EXCAVADORA,bx-bW*0.45,by-dH*0.7,exW,exH);
+      }
+      // Minero next to draga
+      const mnW=mob?12:16,mnH=mnW*80/30;
+      drawObj(OBJ_MINERO,bx+dW*0.4,by-dH*0.2,mnW,mnH);
+      // Hose into water
+      ctx.strokeStyle='#1A1A2A';ctx.lineWidth=mob?2:3;
+      ctx.beginPath();ctx.moveTo(bx+bW*0.3,by+bH);
+      ctx.quadraticCurveTo(bx+bW*0.4,by+bH+12,bx+bW*0.2,by+bH+22+Math.sin(animFrame*0.06)*3);
+      ctx.stroke();
+      // Smoke from motor
+      for(let p=0;p<3;p++){
+        ctx.fillStyle=`rgba(60,60,60,${0.4-p*0.1})`;
+        ctx.beginPath();ctx.arc(bx+dW*0.2,by-dH*0.5-p*7-(animFrame%18)*0.4,2+p*1.5,0,Math.PI*2);ctx.fill();
+      }
+      // Mercury warning
+      if(mine.mercury){
+        ctx.strokeStyle='rgba(255,140,0,0.6)';ctx.lineWidth=2;
+        ctx.beginPath();ctx.ellipse(bx,by+bH/2,bW*0.75,bH*1.4,0,0,Math.PI*2);ctx.stroke();
+        ctx.fillStyle='#FF004D';ctx.font='bold '+(mob?9:12)+'px monospace';ctx.textAlign='center';
+        ctx.fillText('☠ Hg',bx,by-dH*0.45-4);ctx.textAlign='left';
+      }
+      // Mine name + income (below the draga sprite, not on top)
+      const labelY=by+dH*0.7+8;
+      ctx.fillStyle='rgba(0,0,0,0.75)';ctx.fillRect(bx-32,labelY-2,64,20);
+      ctx.fillStyle='#fff';ctx.font=fs+'px "Press Start 2P"';ctx.textAlign='center';
+      ctx.fillText(MINE_NAMES[mine.idx]||'',bx,labelY+8);
+      ctx.fillStyle='#FFA300';ctx.font=(fs-2)+'px "Press Start 2P"';
+      ctx.fillText('+S/'+fmt(mine.output),bx,labelY+16);
+      ctx.textAlign='left';
+    }
+    // === BOTTOM BANK: comunidad indígena + puerto + tractores + campamento ===
+    const up=G.mines.filter(m=>m.upgraded).length;
+    const bankH=H-rivBot;
+    // Comunidad indígena (always visible, left side)
+    const cmSz=Math.min(mob?75:100,bankH-4);
+    drawObjFit(OBJ_COMUNIDAD,W*0.02,rivBot+2,cmSz,cmSz);
+    // Puerto cerca de la comunidad (only if upgraded mines)
+    if(up>0){
+      const ptSz=Math.min(mob?70:95,bankH-4);
+      const ptX=W*0.32;
+      drawObjFit(OBJ_PUERTO,ptX,rivBot+2,ptSz,ptSz);
+      // Tractors arriving via port (1 per upgraded mine, max 4)
+      for(let t=0;t<Math.min(up,4);t++){
+        const trSz=mob?14:20;
+        const trX=ptX+ptSz+4+(t%2)*(trSz+2);
+        const trY=rivBot+8+Math.floor(t/2)*(trSz+2);
+        drawObjFit(OBJ_TRACTOR,trX,trY,trSz,trSz);
+      }
+    }
+    // Campamento minero (right side, only if upgraded)
+    if(up>0){
+      const ccSz=Math.min(mob?100:140,bankH-4);
+      drawObjFit(OBJ_CAMPAMENTO,W-ccSz-W*0.02,rivBot+2,ccSz,ccSz);
+    }
+    // === EMPTY STATE ===
+    if(act.length===0){
+      ctx.fillStyle='rgba(0,0,0,0.65)';ctx.fillRect(W*0.1,H*0.4,W*0.8,32);
+      ctx.fillStyle='#FFA300';ctx.font=(mob?10:13)+'px "Press Start 2P"';ctx.textAlign='center';
+      ctx.fillText('Reclama concesiones REINFO',W/2,H*0.4+20);ctx.textAlign='left';
+    }
+    // === INCOME ===
+    const inc=G.mines.reduce((s,m)=>s+m.output,0);
+    if(inc>0){
+      ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(W-100,8,95,16);
+      ctx.fillStyle='#FFA300';ctx.font=(fs-1)+'px "Press Start 2P"';ctx.textAlign='right';
+      ctx.fillText('+S/'+fmt(inc)+'/mes',W-8,20);ctx.textAlign='left';
+    }
+    drawParticles();
+    return;
+  }
+  // === FALLBACK: procedural render if bg not loaded ===
+  const act=G.mines.filter(m=>m.active);
+  const hasMerc=G.mines.some(m=>m.mercury);
+  const mineCount=G.mines.length;
+  const upgradedCount=G.mines.filter(m=>m.upgraded).length;
+  const skyBot=H*0.10,topBankBot=H*0.22,riverTop=topBankBot,riverBot=H*0.45,mineTop=riverBot,mineH=H-riverBot;
+  // Sky
+  const sky=ctx.createLinearGradient(0,0,0,skyBot);
+  sky.addColorStop(0,'#E6F0E9');
+  sky.addColorStop(1,'#F3D5B0');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,skyBot);
+  // Upper bank
+  const topGround=ctx.createLinearGradient(0,skyBot,0,topBankBot);
+  topGround.addColorStop(0,'#CC6A35');
+  topGround.addColorStop(1,'#A54C24');
+  ctx.fillStyle=topGround;ctx.fillRect(0,skyBot,W,topBankBot-skyBot);
+  drawScatterBlots(0,skyBot,W,topBankBot-skyBot,10,['#8E4723','#C46A35','#D78C4C'],11,0.18);
+  drawJungleBand(-6,skyBot+2,W*0.18,topBankBot-skyBot-4,21,['#183614','#234A19','#356223']);
+  drawJungleBand(W-W*0.18,skyBot+2,W*0.18,topBankBot-skyBot-4,23,['#183614','#234A19','#356223']);
+  if(mineCount>0){
+    for(let i=0;i<Math.min(4,mineCount+1);i++){
+      const sx=W*(0.16+i*0.2);
+      const sy=skyBot+18+(i%2)*12;
+      ctx.fillStyle='rgba(108,57,29,0.45)';
+      ctx.beginPath();ctx.ellipse(sx,sy,28,12,0,0,Math.PI*2);ctx.fill();
+      drawObj(OBJ_DEADTREE,sx-18,sy-22,mob?18:24,mob?18:24);
+      if(i===0)drawObj(OBJ_DRUMS,sx+12,sy-10,mob?18:22,mob?18:22);
+    }
+  }
+  // River
+  const water=ctx.createLinearGradient(0,riverTop,0,riverBot);
+  if(hasMerc){
+    water.addColorStop(0,'#5B9D95');
+    water.addColorStop(1,'#47766C');
+  }else{
+    water.addColorStop(0,'#5C9E93');
+    water.addColorStop(1,'#477D73');
+  }
+  ctx.fillStyle=water;ctx.fillRect(0,riverTop,W,riverBot-riverTop);
+  drawScatterBlots(0,riverTop,W,riverBot-riverTop,12,hasMerc?['#5AD4C4','#87E7DA','#D7FFF9']:['#6DB5A8','#81C3B7','#4E8A7F'],31,0.10);
+  for(let l=0;l<5;l++){
+    const ly=riverTop+(riverBot-riverTop)*(0.14+l*0.2);
+    ctx.strokeStyle='rgba(255,255,255,0.14)';
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    for(let x=0;x<=W;x+=10)ctx.lineTo(x,ly+Math.sin(x*0.018+animFrame*0.035+l)*2.5);
+    ctx.stroke();
+  }
+  // Lower mining field
+  const mineGround=ctx.createLinearGradient(0,mineTop,0,H);
+  mineGround.addColorStop(0,'#8B5A39');
+  mineGround.addColorStop(0.5,'#805031');
+  mineGround.addColorStop(1,'#8D4623');
+  ctx.fillStyle=mineGround;ctx.fillRect(0,mineTop,W,mineH);
+  drawScatterBlots(0,mineTop,W,mineH,18,['#6E3018','#9C4A29','#BC6C3C'],41+mineCount,0.18);
+  drawJungleBand(-8,H*0.80,W*0.16,H*0.16,51,['#27451A','#446A2B','#688A35']);
+  drawJungleBand(W-W*0.16,H*0.82,W*0.18,H*0.15,57,['#27451A','#446A2B','#688A35']);
+  const cols=mob?2:3;
+  const gapX=W*(mob?0.34:0.22);
+  const startX=W*(mob?0.24:0.18);
+  const startY=mineTop+40;
+  const rowGap=mob?92:104;
+  for(let i=0;i<mineCount;i++){
+    const mine=G.mines[i];
+    const col=i%cols,row=Math.floor(i/cols);
+    const pitX=startX+col*gapX+(row%2?10:-6);
+    const pitY=startY+row*rowGap+(col%2?8:0);
+    const pitW=(mob?72:90)+(mine.upgraded?10:0),pitH=(mob?26:34)+(mine.upgraded?4:0);
+    // Tracks from river
+    ctx.strokeStyle='rgba(118,77,46,0.45)';ctx.lineWidth=3;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(pitX-10,riverBot+6);ctx.quadraticCurveTo(pitX-6,(riverBot+pitY)/2,pitX+pitW*0.1,pitY-pitH*0.4);ctx.stroke();
+    // Pit
+    ctx.fillStyle='rgba(94,44,22,0.55)';
+    ctx.beginPath();ctx.ellipse(pitX,pitY,pitW,pitH,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(170,104,61,0.28)';
+    ctx.beginPath();ctx.ellipse(pitX+2,pitY-1,pitW*0.72,pitH*0.58,0,0,Math.PI*2);ctx.fill();
+    const pozaW=mob?40:54,pozaH=pozaW*61/80;
+    drawObj(OBJ_POZA,pitX-pozaW*0.5,pitY-pozaH*0.55,pozaW,pozaH);
+    if(mine.mercury){
+      ctx.fillStyle='rgba(90,212,196,0.42)';
+      ctx.beginPath();ctx.ellipse(pitX+4,pitY+2,pitW*0.28,pitH*0.24,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#F4E06A';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.ellipse(pitX+4,pitY+2,pitW*0.3,pitH*0.28,0,0,Math.PI*2);ctx.stroke();
+    }
+    drawObj(OBJ_DEADTREE,pitX-pitW*0.9,pitY-pitH*1.9,mob?18:24,mob?18:24);
+    drawObj(OBJ_DRUMS,pitX+pitW*0.45,pitY-pitH*0.55,mob?18:22,mob?18:22);
+    if(mine.upgraded){
+      drawObj(OBJ_TUBERIAS,pitX-pitW*0.18,pitY+pitH*0.08,mob?20:26,mob?20:26);
+      drawObj(OBJ_EXCAVADORA,pitX+pitW*0.02,pitY-pitH*1.55,mob?22:30,mob?22:30);
+      if(i%2===0)drawObj(OBJ_HILUX,pitX-pitW*0.72,pitY+pitH*0.55,mob?26:34,mob?26:34);
+    }
+  }
+  // Dragas on the river edge
+  const maxV=Math.min(act.length,4);
+  for(let i=0;i<maxV;i++){
+    const mine=act[i];
+    const bx=W*(0.18+i*0.2)+(i%2?14:-10);
+    const by=riverTop+28+(i%2)*18+Math.sin(animFrame*0.04+i)*2;
+    const dW=mine.upgraded?(mob?72:92):(mob?56:74),dH=dW*114/200;
+    drawObj(OBJ_DRAGA,bx-dW/2,by-dH*0.42,dW,dH);
+    ctx.fillStyle='rgba(141,110,55,0.24)';
+    ctx.beginPath();ctx.ellipse(bx+dW*0.18,by+dH*0.34,dW*0.52,dH*0.22,0.08,0,Math.PI*2);ctx.fill();
+    for(let p=0;p<3;p++){
+      ctx.fillStyle=`rgba(60,60,60,${0.34-p*0.08})`;
+      ctx.beginPath();ctx.arc(bx+dW*0.2,by-dH*0.3-p*7-(animFrame%18)*0.4,2+p*1.5,0,Math.PI*2);ctx.fill();
+    }
+    const minW=mob?14:18,minH=minW*80/30;
+    drawObj(OBJ_MINERO,bx+dW*0.38,by-dH*0.02,minW,minH);
+  }
+  // Anchors / secondary props
+  if(mineCount>1){
+    drawObjFit(OBJ_COMUNIDAD,8,mineTop+12,mob?72:92,mob?72:92);
+  }
+  if(upgradedCount>0){
+    drawObjFit(OBJ_CAMPAMENTO,W-(mob?96:132)-10,mineTop+12,mob?96:132,mob?96:132);
+  }
+  if(act.length===0){
+    ctx.shadowColor='#FFA300';ctx.shadowBlur=8;
+    ctx.fillStyle='rgba(255,240,200,0.92)';ctx.font=(mob?11:14)+'px "Press Start 2P"';ctx.textAlign='center';
+    ctx.fillText('Reclama concesiones REINFO',W/2,mineTop+92);
+    ctx.fillText('para empezar a extraer oro',W/2,mineTop+138);ctx.textAlign='left';ctx.shadowBlur=0;
+  }
+  const inc=G.mines.reduce((s,m)=>s+m.output,0);
+  if(inc>0){
+    ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(W-100,8,95,16);
+    ctx.fillStyle='#FFA300';ctx.font=(fs-1)+'px "Press Start 2P"';ctx.textAlign='right';
+    ctx.fillText('+S/'+fmt(inc)+'/mes',W-8,20);ctx.textAlign='left';
+  }
+  drawParticles();
+}
+
+// =============================================
+// SCENE: NARCOTRAFICO — Cadena vertical
+// =============================================
+function renderNarco(){
+  if(PROCEDURAL_V2){renderNarco_OLD();return;}
+  const mob=W<500,fs=mob?9:12;
+  const z1Top=0,z1Bot=H*0.33,z2Top=H*0.33,z2Bot=H*0.66,z3Top=H*0.66,z3Bot=H;
+
+  // === MIDJOURNEY TILE PATTERN VERSION ===
+  if(TX_JUNGLE.complete){
+    // Full jungle background
+    fillTex(TX_JUNGLE,'jungle',0,0,W,H);
+    // Dark overlay for atmosphere
+    ctx.fillStyle='rgba(0,15,30,0.25)';ctx.fillRect(0,0,W,H);
+    if(TERRAIN_V2){
+      drawObjCover(PLATE_NARCO_COCA,0,z1Top+6,W,z1Bot-z1Top-8,0.96,true);
+      drawObjCover(PLATE_NARCO_CLEARING,0,z2Top+8,W,z2Bot-z2Top-10,0.92,true);
+      drawObjCover(PLATE_NARCO_AIRSTRIP,0,z3Top+8,W,z3Bot-z3Top-10,0.97,true);
+    }
+    // Zone separators (dirt paths)
+    if(TX_LATERITE.complete){
+      fillTex(TX_LATERITE,'lat',0,z1Bot-6,W,12);
+      fillTex(TX_LATERITE,'lat',0,z2Bot-6,W,12);
+    }
+    // === COCA FIELDS (zone 1) - sprite ===
+    if(G.cocaFields.length>0){
+      const alSz=mob?70:100;
+      drawObjFit(OBJ_ALDEA,W-alSz-4,z1Top+4,alSz,alSz);
+    }
+    G.cocaFields.forEach((f,i)=>{
+      if(i>=4)return;
+      const col=i%2,row=Math.floor(i/2);
+      // Square box, fit aspect
+      const boxSz=Math.min(W*0.38,(z1Bot-z1Top-30)*0.5);
+      const fx=W*0.04+col*W*0.42,fy=z1Top+10+row*(z1Bot-z1Top-25)*0.5;
+      drawObjFit(OBJ_COCAFIELD,fx,fy,boxSz,boxSz);
+      drawObjFit(OBJ_COCALERO,fx+boxSz-22,fy+boxSz-30,22,30);
+    });
+    // === LABS (zone 2) - sprite with smoke ===
+    G.labs.forEach((lab,i)=>{
+      if(i>=4)return;
+      const col=i%2,row=Math.floor(i/2);
+      const boxSz=Math.min(W*0.22,(z2Bot-z2Top-35)*0.45);
+      const lx=W*0.08+col*W*0.48,ly=z2Top+10+row*(z2Bot-z2Top-35)*0.5;
+      drawObjFit(OBJ_LAB,lx,ly,boxSz,boxSz);
+      for(let p=0;p<3;p++){
+        ctx.fillStyle=`rgba(40,40,45,${0.5-p*0.12})`;
+        ctx.beginPath();ctx.arc(lx+boxSz*0.6+Math.sin(animFrame*0.05+p*2+i)*4,ly-6-p*8-(animFrame%25)*0.3,3+p*1.5,0,Math.PI*2);ctx.fill();
+      }
+      drawObjFit(OBJ_CENTINELA,lx+boxSz+2,ly+boxSz-26,18,26);
+      drawObjFit(OBJ_DRUMS,lx+boxSz-18,ly+boxSz-22,16,22);
+      if(i===0)drawObjFit(OBJ_HILUX,lx-32,ly+boxSz/2-16,30,30);
+    });
+    // === ROUTES (zone 3) - pista landmark + avionetas ===
+    if(G.routes.length>0){
+      // Pista de aterrizaje (clandestine airstrip) center landmark
+      if(!(TERRAIN_V2&&PLATE_NARCO_AIRSTRIP.complete)){
+        const pW=mob?160:240,pH=pW*280/269;
+        drawObj(OBJ_PISTA,W/2-pW/2,z3Top+5,pW,pH);
+      }
+    }
+    G.routes.forEach((r,i)=>{
+      if(i>=3)return;
+      // Avioneta cruza horizontalmente la zona 3 (runway).
+      // Siempre visible en la franja del airstrip. Alterna direcciones por lane.
+      const avW=mob?26:40,avH=avW*140/122;
+      const goesEast=i%2===0;
+      const laneY=z3Top+(z3Bot-z3Top)*(0.35+i*0.22);
+      // Progress wraps smoothly; plane enters offscreen and exits offscreen
+      const pathW=W+avW*2;
+      const progress=((animFrame*0.7+i*160)%pathW)/pathW;
+      const ax=goesEast?-avW+progress*pathW:W+avW-progress*pathW;
+      ctx.save();
+      ctx.translate(ax,laneY);
+      // Sprite apunta al NORTE por default. Rotar para que apunte al lado en que vuela.
+      ctx.rotate(goesEast?Math.PI/2:-Math.PI/2);
+      if(OBJ_AVIONETA.complete)ctx.drawImage(OBJ_AVIONETA,-avW/2,-avH/2,avW,avH);
+      ctx.restore();
+    });
+    // === ZONE LABELS ===
+    const labels=[
+      {y:z1Top+14,col:'#7BAD2C',txt:'🌿 COCA',count:G.cocaFields.length,unit:'ha'},
+      {y:z2Top+14,col:'#8A40C0',txt:'🧪 LABS',count:G.labs.length,unit:'lab'},
+      {y:z3Top+14,col:'#CC4040',txt:'🛩️ RUTAS',count:G.routes.length,unit:'ruta'},
+    ];
+    labels.forEach(l=>{
+      ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(4,l.y-12,80,16);
+      ctx.fillStyle=l.col;ctx.font=fs+'px "Press Start 2P"';
+      ctx.fillText(l.txt,8,l.y);
+      if(l.count>0){
+        ctx.fillStyle='#fff';ctx.fillText(' '+l.count+' '+l.unit,84,l.y);
+      }
+    });
+    // === EMPTY STATE ===
+    if(G.cocaFields.length===0){
+      ctx.fillStyle='rgba(0,0,0,0.65)';ctx.fillRect(W*0.1,H*0.45,W*0.8,32);
+      ctx.fillStyle='#00E436';ctx.font=(mob?10:13)+'px "Press Start 2P"';ctx.textAlign='center';
+      ctx.fillText('Planta coca → labs → rutas',W/2,H*0.45+20);ctx.textAlign='left';
+    }
+    // === INCOME ===
+    const totalInc=calcSelvaIncome();
+    if(totalInc>0){
+      ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(W-110,8,105,16);
+      ctx.fillStyle='#00E436';ctx.font=(fs-1)+'px "Press Start 2P"';ctx.textAlign='right';
+      ctx.fillText('+S/'+fmt(totalInc)+'/mes',W-8,20);ctx.textAlign='left';
+    }
+    drawParticles();
+    return;
+  }
+
+  // Static background fallback
+  if(drawBg(BG_NARCO)){
+    // Dynamic overlay: zone labels, income, chain status
+    const cocaInc=G.cocaFields.length*2000,labInc=Math.min(G.labs.length*3,G.cocaFields.length)*8000,routeInc=Math.min(G.routes.length*2,G.labs.length)*15000;
+    // Zone labels with income
+    ctx.font=(mob?8:11)+'px "Press Start 2P"';
+    if(G.cocaFields.length>0){ctx.fillStyle='rgba(255,220,100,0.85)';ctx.textAlign='right';ctx.fillText(G.cocaFields.length+' ha · +S/'+fmt(cocaInc)+'/mes',W-8,z1Bot-8);ctx.textAlign='left';}
+    if(G.labs.length>0){ctx.fillStyle='rgba(255,220,100,0.85)';ctx.textAlign='right';ctx.fillText(G.labs.length+' lab'+(G.labs.length>1?'s':'')+' · +S/'+fmt(labInc)+'/mes',W-8,z2Bot-8);ctx.textAlign='left';}
+    if(G.routes.length>0){ctx.fillStyle='rgba(255,220,100,0.85)';ctx.textAlign='right';ctx.fillText(G.routes.length+' ruta'+(G.routes.length>1?'s':'')+' · +S/'+fmt(routeInc)+'/mes',W-8,z3Bot-8);ctx.textAlign='left';}
+    // Chain status
+    ctx.fillStyle='rgba(255,255,255,0.7)';ctx.font=(mob?10:14)+'px monospace';ctx.textAlign='center';
+    ctx.fillText((G.cocaFields.length?'🌿':'⬜')+'→'+(G.labs.length?'🧪':'⬜')+'→'+(G.routes.length?'🛩️':'⬜'),W/2,z2Top+15);
+    ctx.textAlign='left';
+    if(G.cocaFields.length===0){
+      ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(W*0.1,H*0.45,W*0.8,30);
+      ctx.fillStyle='#00E436';ctx.font=(mob?10:13)+'px "Press Start 2P"';ctx.textAlign='center';
+      ctx.fillText('Planta coca → labs → rutas',W/2,H*0.45+20);ctx.textAlign='left';
+    }
+    drawParticles();
+    return;
+  }
+  // === FALLBACK: procedural render ===
+  const sky=ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#008751');sky.addColorStop(0.3,'#1D2B53');sky.addColorStop(0.6,'#1D2B53');sky.addColorStop(1,'#000000');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+
+  // Light rain (subtle, no bugs)
+  if(animFrame%3===0)spawnParticle(Math.random()*W,-5,0.3,3+Math.random()*2,18,'rgba(200,220,255,0.2)',1);
+
+  // Tree canopy edge helper — compact, no overlap
+  function drawCanopyEdge(y,density){
+    const count=Math.ceil(W/(mob?50:40))*density;
+    for(let t=0;t<count;t++){
+      const tx=t*(W/count)+Math.sin(t*2.7)*6;
+      const sz=mob?8+((t*7)%4):12+((t*7)%6);
+      const sway=Math.sin(animFrame*0.015+t*1.3)*1;
+      ctx.fillStyle='#AB5236';ctx.fillRect(tx-1+sway*0.2,y-sz*0.2,3,sz*0.3);
+      ['#008751','#008751'].forEach((c,ci)=>{
+        ctx.fillStyle=c;ctx.beginPath();
+        ctx.arc(tx+sway+Math.sin(ci*2)*2,y-sz*0.2-ci*sz*0.2,sz*(0.4-ci*0.05),0,Math.PI*2);
+        ctx.fill();
+      });
+    }
+  }
+
+  // === ZONE 1: COCA FIELDS ===
+  const clayGrd=ctx.createLinearGradient(0,z1Top,0,z1Bot);
+  clayGrd.addColorStop(0,'rgba(140,60,30,0.2)');clayGrd.addColorStop(1,'rgba(100,45,20,0.35)');
+  ctx.fillStyle=clayGrd;ctx.fillRect(0,z1Top,W,z1Bot-z1Top);
+  drawCanopyEdge(z1Top+8,0.6);
+
+  drawGI('chemical-drop',10,z1Top+9,mob?14:18,0.8,true);
+  ctx.fillStyle='rgba(200,255,200,0.8)';ctx.font=fs+'px "Press Start 2P"';
+  ctx.fillText('COCA',mob?22:28,z1Top+14);
+  if(G.cocaFields.length>0){
+    ctx.fillStyle='rgba(150,220,150,0.7)';ctx.font='bold '+fs+'px monospace';
+    ctx.fillText(G.cocaFields.length+' ha',W-(mob?45:55),z1Top+14);
+  }
+
+  // Coca parcels — compact grid: 6 cols x 2 rows = 12 max visible
+  const parcCols=mob?4:6,parcRows=2;
+  const parcPad=4;
+  const parcAreaW=W-20,parcAreaH=(z1Bot-z1Top)-26;
+  const parcW=Math.floor((parcAreaW-(parcCols-1)*parcPad)/parcCols);
+  const parcH=Math.floor((parcAreaH-(parcRows-1)*parcPad)/parcRows);
+  const parcStartX=10,parcStartY=z1Top+20;
+  const visibleFields=Math.min(G.cocaFields.length,parcCols*parcRows);
+  for(let i=0;i<visibleFields;i++){
+    const col=i%parcCols,row=Math.floor(i/parcCols);
+    const fx=parcStartX+col*(parcW+parcPad),fy=parcStartY+row*(parcH+parcPad);
+    // Dirt patch
+    ctx.fillStyle='rgba(120,55,25,0.35)';
+    ctx.fillRect(fx,fy,parcW,parcH);
+    ctx.strokeStyle='rgba(80,35,15,0.25)';ctx.lineWidth=1;
+    ctx.strokeRect(fx,fy,parcW,parcH);
+    // Plants inside parcel
+    const pCols=mob?3:4,pRows=2;
+    for(let r=0;r<pRows;r++){
+      for(let c=0;c<pCols;c++){
+        const px=fx+6+c*((parcW-12)/pCols)+((parcW-12)/pCols)*0.5;
+        const py=fy+10+r*(parcH-14)/pRows+(parcH-14)/pRows*0.7;
+        const seed=i*100+r*pCols+c;
+        const wind=Math.sin(animFrame*0.03+seed*0.7)*1.2;
+        const plantH=mob?8+((seed*7)%3):10+((seed*7)%4);
+        const leafCount=2+((seed*3)%2);
+        ctx.strokeStyle='#008751';ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(px,py);
+        ctx.quadraticCurveTo(px+wind*0.4,py-plantH*0.5,px+wind*0.2,py-plantH);ctx.stroke();
+        for(let l=0;l<leafCount;l++){
+          const ly=py-plantH*0.35-l*(plantH*0.5/leafCount);
+          const lx=px+wind*0.15*(l/leafCount);
+          const leafSz=mob?2.5:3.5+((seed+l)%2);
+          const leafAngle=((l%2)?-1:1)*(0.4+l*0.15)+wind*0.04;
+          for(const side of[-1,1]){
+            ctx.save();ctx.translate(lx,ly);ctx.rotate(side*leafAngle);
+            ctx.fillStyle=['#008751','#00E436','#008751','#00E436'][(seed+l+side)%4];
+            ctx.beginPath();ctx.ellipse(side*leafSz*0.6,0,leafSz,leafSz*0.35,side*0.3,0,Math.PI*2);ctx.fill();
+            ctx.restore();
+          }
+        }
+        if(seed%5===0){
+          ctx.fillStyle='#CC2200';
+          ctx.beginPath();ctx.arc(px+wind*0.15+1,py-plantH*0.45,mob?1:1.5,0,Math.PI*2);ctx.fill();
+        }
+      }
+    }
+  }
+  // Cocalero on desktop (max 1)
+  if(!mob&&G.cocaFields.length>0&&visibleFields>0){
+    const lastCol=(visibleFields-1)%parcCols,lastRow=Math.floor((visibleFields-1)/parcCols);
+    const cx=parcStartX+lastCol*(parcW+parcPad)+parcW+8,cy=parcStartY+lastRow*(parcH+parcPad)+parcH-5;
+    if(cx<W*0.75){ctx.save();ctx.scale(0.4,0.4);ctx.translate(cx/0.4,cy/0.4);drawCocalero(0,0,animFrame);ctx.restore();}
+  }
+
+  // Low mist over coca
+  for(let m=0;m<3;m++){
+    const my=z1Bot-10-m*12,mx=((animFrame*0.3+m*200)%(W+200))-100;
+    ctx.fillStyle=`rgba(180,220,180,${0.04-m*0.01})`;
+    ctx.beginPath();ctx.ellipse(mx,my,80+m*20,6+m*2,0,0,Math.PI*2);ctx.fill();
+  }
+
+  // === TRANSITION 1 ===
+  drawCanopyEdge(z2Top,0.8);
+  if(G.cocaFields.length>0&&G.labs.length>0){
+    ctx.strokeStyle='rgba(57,255,20,0.5)';ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.lineDashOffset=-animFrame*1.5;
+    ctx.beginPath();ctx.moveTo(W/2,z2Top-8);ctx.lineTo(W/2,z2Top+12);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(57,255,20,0.6)';ctx.beginPath();ctx.moveTo(W/2-6,z2Top+10);ctx.lineTo(W/2,z2Top+18);ctx.lineTo(W/2+6,z2Top+10);ctx.closePath();ctx.fill();
+  }
+
+  // === ZONE 2: LABS — compact grid like coca ===
+  drawGI('bubbling-flask',10,z2Top+9,mob?14:18,0.8,true);
+  ctx.fillStyle='rgba(200,255,200,0.8)';ctx.font=fs+'px "Press Start 2P"';
+  ctx.fillText('LABS',mob?22:28,z2Top+14);
+  if(G.labs.length>0){
+    ctx.fillStyle='rgba(180,140,220,0.7)';ctx.font='bold '+fs+'px monospace';
+    ctx.fillText(G.labs.length+' lab'+(G.labs.length>1?'s':''),W-(mob?50:60),z2Top+14);
+  }
+  const labCols=mob?3:6,labRows=2;
+  const labPad=mob?4:6;
+  const labAreaW=W-20,labAreaH=(z2Bot-z2Top)-26;
+  const labW=Math.floor((labAreaW-(labCols-1)*labPad)/labCols);
+  const labH=Math.floor((labAreaH-(labRows-1)*labPad)/labRows);
+  const labStartX=10,labStartY=z2Top+20;
+  const visibleLabs=Math.min(G.labs.length,labCols*labRows);
+  for(let i=0;i<visibleLabs;i++){
+    const col=i%labCols,row=Math.floor(i/labCols);
+    const lx=labStartX+col*(labW+labPad),ly=labStartY+row*(labH+labPad);
+    // Chemical glow under shack
+    const grd=ctx.createRadialGradient(lx+labW/2,ly+labH,0,lx+labW/2,ly+labH,labW*0.6);
+    grd.addColorStop(0,'rgba(57,255,20,0.06)');grd.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=grd;ctx.fillRect(lx-5,ly,labW+10,labH+8);
+    // Shack body
+    const shW=Math.min(labW-4,mob?36:55),shH=Math.min(labH-8,mob?18:28);
+    const sx=lx+(labW-shW)/2,sy=ly+(labH-shH)/2+2;
+    ctx.fillStyle='#AB5236';ctx.fillRect(sx,sy,shW,shH);
+    // Corrugated tin roof
+    ctx.fillStyle='#8A8A8A';
+    ctx.beginPath();ctx.moveTo(sx-3,sy);ctx.lineTo(sx+shW/2,sy-8);ctx.lineTo(sx+shW+3,sy);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.12)';ctx.lineWidth=0.5;
+    for(let ri=1;ri<4;ri++){ctx.beginPath();ctx.moveTo(sx-1+ri*shW/4,sy);ctx.lineTo(sx+shW/2,sy-8);ctx.stroke();}
+    // Door with green glow
+    const dw=shW*0.25,dh=shH*0.55;
+    const dx=sx+shW*0.37,dy=sy+shH-dh;
+    ctx.fillStyle='#000000';ctx.fillRect(dx,dy,dw,dh);
+    const glowA=0.15+Math.sin(animFrame*0.06+i)*0.05;
+    ctx.fillStyle='rgba(57,255,20,'+glowA+')';ctx.fillRect(dx+1,dy+1,dw-2,dh-1);
+    // Barrel next to shack
+    ctx.fillStyle='#1D2B53';ctx.fillRect(sx+shW+2,sy+shH-8,5,8);
+    // Chemical puddle
+    ctx.fillStyle='rgba(57,255,20,'+String(0.1+Math.sin(animFrame*0.04+i*2)*0.03)+')';
+    ctx.beginPath();ctx.ellipse(sx+shW*0.5,sy+shH+2,8,2,0,0,Math.PI*2);ctx.fill();
+    // Toxic smoke (2 puffs)
+    for(let p=0;p<2;p++){
+      const sp2=(animFrame*0.8+p*35+i*50)%60;
+      const smY=sy-8-sp2*0.4,smX=sx+shW*0.55+Math.sin(animFrame*0.04+p*2+i)*3;
+      const smR=2+p+sp2*0.02,smA=Math.max(0,0.18-sp2*0.003);
+      ctx.fillStyle=`rgba(80,180,60,${smA})`;
+      ctx.beginPath();ctx.arc(smX,smY,smR,0,Math.PI*2);ctx.fill();
+    }
+  }
+
+  // === TRANSITION 2 ===
+  drawCanopyEdge(z3Top,0.8);
+  if(G.labs.length>0&&G.routes.length>0){
+    ctx.strokeStyle='rgba(57,255,20,0.5)';ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.lineDashOffset=-animFrame*1.5;
+    ctx.beginPath();ctx.moveTo(W/2,z3Top-8);ctx.lineTo(W/2,z3Top+12);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(57,255,20,0.6)';ctx.beginPath();ctx.moveTo(W/2-6,z3Top+10);ctx.lineTo(W/2,z3Top+18);ctx.lineTo(W/2+6,z3Top+10);ctx.closePath();ctx.fill();
+  }
+
+  // === ZONE 3: ROUTES ===
+  // Brown river
+  const rivY=z3Top+(z3Bot-z3Top)*0.5;
+  ctx.fillStyle='rgba(90,60,30,0.3)';
+  ctx.beginPath();ctx.moveTo(-5,rivY-8);
+  for(let x=0;x<=W+10;x+=15)ctx.lineTo(x,rivY-8+Math.sin(x*0.012+animFrame*0.03)*6);
+  ctx.lineTo(W+5,rivY+12);
+  for(let x=W+5;x>=-5;x-=15)ctx.lineTo(x,rivY+12+Math.sin(x*0.015+animFrame*0.02)*4);
+  ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(120,80,40,0.2)';ctx.lineWidth=1;
+  for(let rl=0;rl<3;rl++){ctx.beginPath();for(let x=0;x<W;x+=10)ctx.lineTo(x,rivY-4+rl*5+Math.sin(x*0.02+animFrame*0.05+rl)*3);ctx.stroke();}
+
+  drawGI('airplane',10,z3Top+9,mob?14:18,0.8,true);
+  ctx.fillStyle='rgba(200,255,200,0.8)';ctx.font=fs+'px "Press Start 2P"';
+  ctx.fillText('RUTAS',mob?22:28,z3Top+14);
+  if(G.routes.length>0){
+    ctx.fillStyle='rgba(200,150,150,0.7)';ctx.font='bold '+fs+'px monospace';
+    ctx.fillText(G.routes.length+' ruta'+(G.routes.length>1?'s':''),W-(mob?50:60),z3Top+14);
+  }
+  G.routes.forEach((r,i)=>{
+    if(i>=3)return;
+    const ry=z3Top+22+i*(z3Bot-z3Top-28)*0.33;
+    if(i===0){
+      const stripX=W*0.6,stripW=mob?50:80,stripH=mob?8:12;
+      ctx.fillStyle='rgba(100,70,40,0.5)';ctx.fillRect(stripX,ry+2,stripW,stripH);
+      ctx.strokeStyle='rgba(200,180,100,0.4)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+      ctx.beginPath();ctx.moveTo(stripX+4,ry+2+stripH/2);ctx.lineTo(stripX+stripW-4,ry+2+stripH/2);ctx.stroke();ctx.setLineDash([]);
+    }
+    ctx.strokeStyle='rgba(180,100,0,0.3)';ctx.lineWidth=2;ctx.setLineDash([6,6]);ctx.lineDashOffset=-animFrame*2;
+    ctx.beginPath();ctx.moveTo(W*0.1,ry+8);ctx.lineTo(W*0.75,ry+8);ctx.stroke();ctx.setLineDash([]);
+    const progress=(animFrame*0.008+i*0.33)%1;
+    const ax=W*0.1+progress*(W*0.65);
+    ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(Math.max(W*0.1,ax-60),ry+8);ctx.lineTo(ax-5,ry+8);ctx.stroke();
+    ctx.font=(mob?16:24)+'px "Noto Color Emoji",serif';ctx.textAlign='center';
+    drawGI('airplane',ax,ry+8,mob?18:26,null,true);ctx.textAlign='left';
+  });
+
+  // Empty state
+  if(G.cocaFields.length===0){
+    ctx.shadowColor='#008751';ctx.shadowBlur=8;
+    ctx.fillStyle='rgba(200,255,200,0.85)';ctx.font=(mob?10:14)+'px "Press Start 2P"';ctx.textAlign='center';
+    ctx.fillText('Planta coca → labs → rutas',W/2,H*0.5);ctx.textAlign='left';ctx.shadowBlur=0;
+  }
+
+  // === Fog layer ===
+  for(let f=0;f<(mob?3:5);f++){
+    const fy2=H*0.15+f*H*0.18,fx2=((animFrame*0.2+f*300)%(W+300))-150;
+    ctx.fillStyle=`rgba(150,200,150,${0.03-f*0.004})`;
+    ctx.beginPath();ctx.ellipse(fx2,fy2,100+f*30,8+f*3,0,0,Math.PI*2);ctx.fill();
+  }
+  // Fireflies
+  for(let ff=0;ff<(mob?4:8);ff++){
+    const ffx=(Math.sin(animFrame*0.02+ff*1.7)*0.4+0.5)*W;
+    const ffy=(Math.sin(animFrame*0.015+ff*2.3)*0.4+0.3)*H;
+    const ffa=0.3+Math.sin(animFrame*0.08+ff*3)*0.3;
+    ctx.fillStyle=`rgba(200,255,100,${ffa})`;
+    ctx.beginPath();ctx.arc(ffx,ffy,mob?1.5:2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=`rgba(200,255,100,${ffa*0.3})`;
+    ctx.beginPath();ctx.arc(ffx,ffy,mob?3:5,0,Math.PI*2);ctx.fill();
+  }
+  drawParticles();
+}
+function renderNarco_OLD(){
+  const mob=W<500,fs=mob?9:12;
+  const z1Top=0,z1Bot=H*0.34,z2Top=H*0.34,z2Bot=H*0.68,z3Top=H*0.68,z3Bot=H;
+  const cocaCount=G.cocaFields.length,labsCount=G.labs.length,routeCount=G.routes.length;
+  const sky=ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#698B68');
+  sky.addColorStop(0.26,'#315E34');
+  sky.addColorStop(0.65,'#1F3D0F');
+  sky.addColorStop(1,'#13270D');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(8,20,10,0.18)';ctx.fillRect(0,0,W,H);
+  // Distant selva, solo de fondo
+  drawJungleBand(-16,10,W+32,H*0.16,17,['#17310E','#234919','#305A1E'],'#342116');
+  drawJungleBand(-12,z1Top+8,W+24,H*0.16,21,['#183614','#234A19','#3B6726'],'#3C2617');
+  // Zone fills
+  const cocaZone=ctx.createLinearGradient(0,z1Top,0,z1Bot);
+  cocaZone.addColorStop(0,'rgba(54,88,29,0.55)');
+  cocaZone.addColorStop(1,'rgba(32,52,17,0.82)');
+  ctx.fillStyle=cocaZone;ctx.fillRect(0,z1Top,W,z1Bot-z1Top);
+  const labZone=ctx.createLinearGradient(0,z2Top,0,z2Bot);
+  labZone.addColorStop(0,'rgba(55,44,23,0.46)');
+  labZone.addColorStop(1,'rgba(34,30,17,0.72)');
+  ctx.fillStyle=labZone;ctx.fillRect(0,z2Top,W,z2Bot-z2Top);
+  const routeZone=ctx.createLinearGradient(0,z3Top,0,z3Bot);
+  routeZone.addColorStop(0,'rgba(58,42,20,0.42)');
+  routeZone.addColorStop(1,'rgba(40,30,15,0.76)');
+  ctx.fillStyle=routeZone;ctx.fillRect(0,z3Top,W,z3Bot-z3Top);
+  ctx.fillStyle='rgba(255,255,255,0.05)';ctx.fillRect(0,z2Top-1,W,2);ctx.fillRect(0,z3Top-1,W,2);
+  // === COCA ===
+  drawGI('chemical-drop',10,z1Top+9,mob?14:18,0.8,true);
+  ctx.fillStyle='#8FD34A';ctx.font=fs+'px "Press Start 2P"';ctx.fillText('COCA',mob?22:28,z1Top+14);
+  if(cocaCount>0){
+    ctx.fillStyle='rgba(210,255,160,0.8)';ctx.font='bold '+fs+'px monospace';
+    ctx.fillText(cocaCount+' ha',W-(mob?44:54),z1Top+14);
+  }
+  const plotCols=mob?2:3,plotRows=mob?2:2;
+  const plotPad=mob?8:10;
+  const plotAreaW=W-20,plotAreaH=(z1Bot-z1Top)-32;
+  const plotW=Math.floor((plotAreaW-(plotCols-1)*plotPad)/plotCols);
+  const plotH=Math.floor((plotAreaH-(plotRows-1)*plotPad)/plotRows);
+  const visiblePlots=Math.min(cocaCount,plotCols*plotRows);
+  for(let i=0;i<visiblePlots;i++){
+    const col=i%plotCols,row=Math.floor(i/plotCols);
+    const px=10+col*(plotW+plotPad),py=z1Top+22+row*(plotH+plotPad);
+    ctx.fillStyle='rgba(122,78,43,0.5)';ctx.fillRect(px,py,plotW,plotH);
+    ctx.fillStyle='#5FA632';ctx.fillRect(px+2,py+2,plotW-4,plotH-4);
+    ctx.strokeStyle='rgba(35,78,14,0.45)';ctx.lineWidth=1;
+    const rows=4+(i%2),rowGap=(plotH-12)/(rows+1);
+    for(let r=1;r<=rows;r++){
+      const yy=py+6+r*rowGap;
+      ctx.beginPath();ctx.moveTo(px+5,yy);ctx.lineTo(px+plotW-5,yy);ctx.stroke();
+    }
+    for(let c=0;c<3;c++){
+      const bx=px+14+c*(plotW-28)/2;
+      const by=py+plotH*0.55+(c%2?4:-2);
+      ctx.fillStyle='#3F7822';
+      ctx.beginPath();ctx.ellipse(bx,by,10,5,0,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.ellipse(bx+4,by-5,8,4,0.35,0,Math.PI*2);ctx.fill();
+    }
+    if(i===0)drawObjFit(OBJ_COCALERO,px+plotW-24,py+plotH-30,20,30);
+  }
+  // === LABS ===
+  drawGI('bubbling-flask',10,z2Top+9,mob?14:18,0.8,true);
+  ctx.fillStyle='#D9D9D9';ctx.font=fs+'px "Press Start 2P"';ctx.fillText('LABS',mob?22:28,z2Top+14);
+  if(labsCount>0){
+    ctx.fillStyle='rgba(220,220,220,0.8)';ctx.font='bold '+fs+'px monospace';
+    ctx.fillText(labsCount+' lab'+(labsCount>1?'s':''),W-(mob?52:62),z2Top+14);
+  }
+  const labCols=mob?2:3,labRows=2;
+  const labAreaW=W-24,labAreaH=(z2Bot-z2Top)-34;
+  const labW=Math.floor((labAreaW-(labCols-1)*12)/labCols),labH=Math.floor((labAreaH-(labRows-1)*10)/labRows);
+  const visibleLabs=Math.min(labsCount,labCols*labRows);
+  const labPoints=[];
+  for(let i=0;i<visibleLabs;i++){
+    const col=i%labCols,row=Math.floor(i/labCols);
+    const lx=12+col*(labW+12),ly=z2Top+24+row*(labH+10);
+    const cx=lx+labW*0.52,cy=ly+labH*0.58;
+    labPoints.push({x:cx,y:cy});
+    ctx.fillStyle='rgba(112,78,48,0.42)';
+    ctx.beginPath();ctx.ellipse(cx,cy,labW*0.34,labH*0.26,0,0,Math.PI*2);ctx.fill();
+    drawObjFit(OBJ_LAB,lx+labW*0.18,ly+labH*0.1,labW*0.52,labH*0.68);
+    drawObjFit(OBJ_DRUMS,lx+labW*0.62,ly+labH*0.42,18,22);
+    if(i===0)drawObjFit(OBJ_CENTINELA,lx+labW*0.78,ly+labH*0.24,20,28);
+    for(let p=0;p<3;p++){
+      ctx.fillStyle=`rgba(180,180,180,${0.28-p*0.07})`;
+      ctx.beginPath();
+      ctx.arc(lx+labW*0.54+Math.sin(animFrame*0.04+p+i)*3,ly+labH*0.1-p*8-(animFrame%22)*0.35,3+p*1.5,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+  // Trochas curvas si hay labs/rutas
+  if(labPoints.length){
+    ctx.strokeStyle='rgba(94,60,29,0.6)';
+    ctx.lineWidth=mob?4:6;
+    ctx.lineCap='round';
+    labPoints.forEach((pt,i)=>{
+      ctx.beginPath();
+      ctx.moveTo(pt.x,pt.y+labH*0.15);
+      ctx.quadraticCurveTo(pt.x+(i%2?-26:26),z3Top-10,W*0.55+(i%2?-20:20),z3Top+14+i*4);
+      ctx.stroke();
+    });
+  }
+  // === RUTAS ===
+  drawGI('airplane',10,z3Top+9,mob?14:18,0.8,true);
+  ctx.fillStyle='#E4C28A';ctx.font=fs+'px "Press Start 2P"';ctx.fillText('RUTAS',mob?22:28,z3Top+14);
+  if(routeCount>0){
+    ctx.fillStyle='rgba(255,220,180,0.8)';ctx.font='bold '+fs+'px monospace';
+    ctx.fillText(routeCount+' ruta'+(routeCount>1?'s':''),W-(mob?52:62),z3Top+14);
+  }
+  const stripY=z3Top+(z3Bot-z3Top)*0.55;
+  if(routeCount>0){
+    ctx.fillStyle='#5E3C1D';
+    ctx.fillRect(W*0.16,stripY-(mob?8:10),W*0.62,mob?16:20);
+    ctx.strokeStyle='rgba(230,214,161,0.5)';ctx.lineWidth=2;ctx.setLineDash([8,8]);
+    ctx.beginPath();ctx.moveTo(W*0.18,stripY);ctx.lineTo(W*0.76,stripY);ctx.stroke();ctx.setLineDash([]);
+    if(OBJ_PISTA.complete)drawObjFit(OBJ_PISTA,W*0.72,z3Top+14,mob?86:120,mob?38:52);
+  }
+  for(let i=0;i<Math.min(routeCount,3);i++){
+    const progress=(animFrame*0.008+i*0.32)%1;
+    const ax=W*0.2+progress*(W*0.54);
+    const ay=stripY+(i-1)*(mob?10:14);
+    const avW=mob?22:32,avH=avW*140/122;
+    ctx.save();
+    ctx.translate(ax,ay);
+    if(i%2===1)ctx.rotate(Math.PI);
+    if(OBJ_AVIONETA.complete)ctx.drawImage(OBJ_AVIONETA,-avW/2,-avH/2,avW,avH);
+    ctx.restore();
+  }
+  const cocaInc=G.cocaFields.length*2000,labInc=Math.min(G.labs.length*3,G.cocaFields.length)*8000,routeInc=Math.min(G.routes.length*2,G.labs.length)*15000;
+  if(cocaInc>0){ctx.fillStyle='rgba(255,220,100,0.7)';ctx.font=(fs-2)+'px "Press Start 2P"';ctx.textAlign='right';ctx.fillText('+S/'+fmt(cocaInc)+'/mes',W-8,z1Bot-6);ctx.textAlign='left';}
+  if(labInc>0){ctx.fillStyle='rgba(255,220,100,0.7)';ctx.font=(fs-2)+'px "Press Start 2P"';ctx.textAlign='right';ctx.fillText('+S/'+fmt(labInc)+'/mes',W-8,z2Bot-6);ctx.textAlign='left';}
+  if(routeInc>0){ctx.fillStyle='rgba(255,220,100,0.7)';ctx.font=(fs-2)+'px "Press Start 2P"';ctx.textAlign='right';ctx.fillText('+S/'+fmt(routeInc)+'/mes',W-8,z3Bot-6);ctx.textAlign='left';}
+  if(cocaCount===0){
+    ctx.shadowColor='#5FA632';ctx.shadowBlur=10;
+    ctx.fillStyle='rgba(220,255,210,0.92)';ctx.font=(mob?10:14)+'px "Press Start 2P"';ctx.textAlign='center';
+    ctx.fillText('Planta coca → labs → rutas',W/2,H*0.5);ctx.textAlign='left';ctx.shadowBlur=0;
+  }
+  for(let f=0;f<(mob?3:5);f++){
+    const fy=H*0.15+f*H*0.16,fx=((animFrame*0.18+f*220)%(W+260))-130;
+    ctx.fillStyle=`rgba(180,210,170,${0.03-f*0.004})`;
+    ctx.beginPath();ctx.ellipse(fx,fy,90+f*24,7+f*2,0,0,Math.PI*2);ctx.fill();
+  }
+  drawParticles();
+}
+
+function drawFlowArrow(x1,y1,x2,y2){
+  ctx.strokeStyle='rgba(57,255,20,0.6)';ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.lineDashOffset=-animFrame*1.5;
+  ctx.beginPath();ctx.moveTo(x1-20,y1);ctx.lineTo(x2+20,y2);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='rgba(57,255,20,0.7)';ctx.beginPath();ctx.moveTo(x2+20,y2-6);ctx.lineTo(x2+30,y2);ctx.lineTo(x2+20,y2+6);ctx.closePath();ctx.fill();
+}
+
+// =============================================
+// SCENE: EXTORSION — Calle lateral
+// =============================================
+function renderExtorsion(){
+  const mob=W<500,fs=mob?9:12;
+  // === MIDJOURNEY TILE PATTERN VERSION ===
+  if(!PROCEDURAL_V2 && TX_STREET.complete){
+    // Layout
+    const topEnd=H*0.30,roadT=H*0.30,roadB=H*0.70,botStart=H*0.70;
+    const maxBiz=Math.min(G.blocks.length,6);
+    const bizW=W/3;
+    // === SIDEWALK (Lima dust) behind buildings ===
+    if(TERRAIN_V2&&PLATE_URBAN_SIDEWALK.complete){
+      drawObjCover(PLATE_URBAN_SIDEWALK,0,0,W,topEnd,0.96,true);
+      drawObjCover(PLATE_URBAN_SIDEWALK,0,botStart,W,H-botStart,0.96,true);
+    }else if(TX_DUST.complete){
+      fillTex(TX_DUST,'dust',0,0,W,topEnd);
+      fillTex(TX_DUST,'dust',0,botStart,W,H-botStart);
+    }
+    // === STREET (asphalt with markings) ===
+    fillTex(TX_STREET,'street',0,roadT,W,roadB-roadT);
+    // === BUILDINGS (procedural over) ===
+    function drawLimaBuilding(bx,by,bw,bh,facadeC,blockI){
+      const block=G.blocks[blockI];
+      // Pick building sprite based on business type
+      // Map each business index to its own sprite (matching BIZ array order)
+      const buildingSprites=[
+        OBJ_BODEGA,OBJ_CEVICHERIA,OBJ_CONSTRUCTORA,OBJ_FARMACIA,
+        OBJ_TRANSPORTE,OBJ_COLEGIO,OBJ_GRIFO,OBJ_HOTEL,
+        OBJ_MERCADO,OBJ_TALLER,OBJ_PELUQUERIA,OBJ_FINANCIERA,
+      ];
+      const sprite=buildingSprites[blockI]||OBJ_BODEGA;
+      if(sprite&&sprite.complete){
+        drawObjFit(sprite,bx,by,bw,bh-4);
+      }else{
+        // Procedural fallback
+        ctx.fillStyle=facadeC[1];ctx.fillRect(bx,by,bw,bh);
+        ctx.fillStyle=facadeC[2];ctx.fillRect(bx,by+bh-4,bw,4);
+        ctx.strokeStyle=facadeC[2];ctx.lineWidth=2;ctx.strokeRect(bx,by,bw,bh);
+        const winR=Math.floor(bh/14)-1, winC=Math.floor(bw/14)-1;
+        for(let r=0;r<winR;r++)for(let c=0;c<winC;c++){
+          const wx=bx+8+c*14, wy=by+8+r*14;
+          if(wx+8>bx+bw-4||wy+8>by+bh-12)continue;
+          ctx.fillStyle='#1A2B53';ctx.fillRect(wx,wy,8,8);
+          ctx.fillStyle='#5A8AB0';ctx.fillRect(wx+1,wy+1,6,6);
+          for(let bar=wx+1;bar<wx+8;bar+=2){ctx.fillStyle='#333';ctx.fillRect(bar,wy,1,8);}
+        }
+        ctx.fillStyle='#666';ctx.fillRect(bx+bw/2-8,by+bh-14,16,12);
+        ctx.fillStyle=blockI%3===0?'#cc2222':blockI%3===1?'#2255cc':'#ddaa22';
+        ctx.fillRect(bx+bw/2-12,by+bh-22,24,5);
+      }
+      // === STATE OVERLAY ===
+      if(block.paying){
+        ctx.fillStyle='rgba(255,0,77,0.25)';ctx.fillRect(bx,by,bw,bh);
+        ctx.strokeStyle='#FF004D';ctx.lineWidth=3;ctx.strokeRect(bx,by,bw,bh);
+        if((animFrame+blockI*13)%50<25){
+          ctx.fillStyle='#FFA300';ctx.font=(mob?10:13)+'px "Press Start 2P"';ctx.textAlign='center';
+          ctx.fillText('$',bx+bw/2,by+bh/2-((animFrame+blockI*13)%25)*0.4);ctx.textAlign='left';
+        }
+      }
+      if(block.resistant){
+        ctx.fillStyle='rgba(41,173,255,0.25)';ctx.fillRect(bx,by,bw,bh);
+        ctx.strokeStyle='#29ADFF';ctx.lineWidth=3;ctx.strokeRect(bx,by,bw,bh);
+        drawGI('fist',bx+bw/2,by+bh/2,mob?16:22);
+      }
+      // Name label
+      ctx.fillStyle='rgba(0,0,0,0.7)';ctx.fillRect(bx+2,by+bh-10,bw-4,9);
+      ctx.fillStyle='#fff';ctx.font=(mob?7:9)+'px "Press Start 2P"';ctx.textAlign='center';
+      ctx.fillText(block.icon+' '+block.name.substring(0,mob?5:8),bx+bw/2,by+bh-3);ctx.textAlign='left';
+    }
+    const facades=[
+      ['#D4A843','#C09030','#9A7220'],  // ochre
+      ['#C4725A','#A85A40','#824330'],  // salmon
+      ['#7FBFA0','#5FA080','#407A5C'],  // mint
+      ['#6BA3C7','#4A82A6','#305C7A'],  // celeste
+      ['#A0998F','#7C7570','#5C5550'],  // concrete
+      ['#D4919A','#B0707A','#8A5258'],  // pink
+    ];
+    // Top buildings
+    for(let i=0;i<3;i++){
+      if(i>=maxBiz)break;
+      drawLimaBuilding(i*bizW+4,4,bizW-10,topEnd-10,facades[i%6],i);
+    }
+    // Bottom buildings — offset half a block so they don't align with top
+    for(let i=0;i<3;i++){
+      const bi=i+3;if(bi>=maxBiz)break;
+      drawLimaBuilding(i*bizW+bizW*0.15+4,botStart+8,bizW-10,H-botStart-12,facades[(bi+2)%6],bi);
+    }
+    // === VEHICLES on road (combi + mototaxis) ===
+    // Combi sprite naturally faces LEFT (front on left side of image)
+    const cW=mob?40:55, cH=cW;
+    const mW=mob?22:30, mH=mW;
+    // Helper: draw sprite with optional horizontal flip
+    function drawFlipped(img,x,y,w,h,flip){
+      if(!img||!img.complete)return;
+      ctx.save();
+      if(flip){ctx.translate(x+w,y);ctx.scale(-1,1);ctx.drawImage(img,0,0,w,h);}
+      else{ctx.drawImage(img,x,y,w,h);}
+      ctx.restore();
+    }
+    // Combi going right (top lane) - flip
+    drawFlipped(OBJ_COMBI,(animFrame*0.6)%(W+cW)-cW,roadT+10,cW,cH,true);
+    // Combi going left (bottom lane) - no flip
+    drawFlipped(OBJ_COMBI,W-(animFrame*0.5)%(W+cW),roadB-cH-12,cW,cH,false);
+    // Mototaxis going right - flip
+    drawFlipped(OBJ_MOTOTAXI,(animFrame*0.9+W*0.3)%(W+mW)-mW,roadT+cH+14,mW,mH,true);
+    // Mototaxi going left - no flip
+    drawFlipped(OBJ_MOTOTAXI,W-(animFrame*0.7+W*0.3)%(W+mW),roadB-mH-cH-16,mW,mH,false);
+    // === STATIC LIMA STREET DECOR — props 2x larger ===
+    const tsy=topEnd-32, bsy=botStart+6;
+    drawObjFit(OBJ_ANTICUCHERA,bizW*0.78,tsy-12,55,60);
+    drawObjFit(OBJ_FRUTERO,bizW*1.80,tsy-8,58,55);
+    drawObjFit(OBJ_BANCA,bizW*0.32,tsy+18,65,24);
+    drawObjFit(OBJ_BANCA,bizW*2.36,bsy+22,65,24);
+    drawObjFit(OBJ_CONO,bizW*0.08,tsy+18,24,30);
+    drawObjFit(OBJ_CONO,bizW*1.55,bsy+22,24,30);
+    drawObjFit(OBJ_HIDRANTE,bizW*1.28,tsy+20,26,28);
+    drawObjFit(OBJ_HIDRANTE,bizW*0.02,bsy+24,26,28);
+    drawObjFit(OBJ_POSTE,bizW*0.55,tsy-10,34,60);
+    drawObjFit(OBJ_POSTE,bizW*2.55,tsy-10,34,60);
+    drawObjFit(OBJ_POSTE,bizW*1.38,bsy-8,34,60);
+    drawObjFit(OBJ_BASURA,bizW*1.02,bsy+18,40,30);
+    drawObjFit(OBJ_BASURA,bizW*2.66,tsy+18,40,30);
+    drawObjFit(OBJ_LLANTAS,bizW*0.76,bsy+18,40,30);
+    // Escombros (only with extorsion damage)
+    if(G.blocks.filter(b=>b.paying||b.resistant).length>2){
+      drawObjFit(OBJ_ESCOMBROS,bizW*2.2,bsy+8,20,20);
+    }
+    drawObjFit(OBJ_INCAKOLA,bizW*1.92,tsy-22,28,42);
+    drawObjFit(OBJ_MOTO,bizW*0.20,bsy+16,55,40);
+    drawObjFit(OBJ_TAXI,bizW*2.82,bsy+12,32,50);
+    // === SICARIOS on sidewalks (sprite) ===
+    const sicCount=Math.min(G.sicarios,mob?3:5);
+    const ssW=mob?20:28, ssH=mob?38:55;
+    for(let s=0;s<sicCount;s++){
+      const sx=(animFrame*1.2+s*(W/Math.max(sicCount,1)))%W;
+      const sy=s%2===0?roadT-ssH+8:roadB-8;
+      drawObj(OBJ_SICARIO,sx-ssW/2,sy,ssW,ssH);
+    }
+    // === FLYING ENVELOPES ===
+    for(let e=G.flyingEnvelopes.length-1;e>=0;e--){
+      const env=G.flyingEnvelopes[e];
+      env.progress+=0.03;
+      if(env.progress>=1){G.flyingEnvelopes.splice(e,1);continue;}
+      const ti=env.targetIdx;
+      if(ti>=maxBiz){G.flyingEnvelopes.splice(e,1);continue;}
+      const tRow=ti<3?0:1,tCol=ti%3;
+      const tx2=tCol*bizW+bizW/2,ty2=tRow===0?topEnd/2:botStart+(H-botStart)/2;
+      const startX=W/2,startY=(roadT+roadB)/2;
+      const ex=startX+env.progress*(tx2-startX);
+      const ey=startY+env.progress*(ty2-startY)+Math.sin(env.progress*Math.PI*2)*-8;
+      ctx.fillStyle='#FFF';ctx.fillRect(ex-6,ey-4,12,8);
+      ctx.strokeStyle='#FF004D';ctx.lineWidth=1.5;ctx.strokeRect(ex-6,ey-4,12,8);
+      ctx.beginPath();ctx.moveTo(ex-6,ey-4);ctx.lineTo(ex,ey);ctx.lineTo(ex+6,ey-4);ctx.stroke();
+    }
+    // === EMPTY STATE ===
+    if(!G.blocks.some(b=>b.paying||b.resistant)){
+      ctx.fillStyle='rgba(0,0,0,0.65)';ctx.fillRect(W*0.15,(roadT+roadB)/2-12,W*0.7,24);
+      ctx.fillStyle='#FF004D';ctx.font=(mob?10:13)+'px "Press Start 2P"';ctx.textAlign='center';
+      ctx.fillText('Envia cartas de cobro',W/2,(roadT+roadB)/2+5);ctx.textAlign='left';
+    }
+    // === INCOME ===
+    const extInc=calcCostaIncome();
+    if(extInc>0){
+      ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(W-100,(roadT+roadB)/2-8,95,16);
+      ctx.fillStyle='#FFA300';ctx.font=(fs-1)+'px "Press Start 2P"';ctx.textAlign='right';
+      ctx.fillText('+S/'+fmt(extInc)+'/mes',W-8,(roadT+roadB)/2+4);ctx.textAlign='left';
+    }
+    drawParticles();
+    return;
+  }
+  // === FALLBACK: BG_CITY image ===
+  if(!PROCEDURAL_V2 && drawBg(BG_CITY)){
+    // Layout: top buildings 0-29%, sidewalk 29-33%, road 33-67%, sidewalk 67-71%, bottom buildings 71-100%
+    const topEnd=H*0.29,roadT=H*0.33,roadB=H*0.67,botStart=H*0.71;
+    const maxBiz=Math.min(G.blocks.length,6);
+    const bizW=W/3;
+    // Draw business state overlays on buildings
+    for(let i=0;i<maxBiz;i++){
+      const row=i<3?0:1, col=i%3;
+      const bx=col*bizW, by=row===0?0:botStart;
+      const bh=row===0?topEnd:H-botStart;
+      const block=G.blocks[i];
+      if(block.paying){
+        ctx.fillStyle='rgba(255,0,77,0.2)';ctx.fillRect(bx,by,bizW-2,bh);
+        ctx.strokeStyle='rgba(255,0,77,0.7)';ctx.lineWidth=2;ctx.strokeRect(bx+1,by+1,bizW-4,bh-2);
+        if((animFrame+i*13)%50<25){
+          ctx.fillStyle='rgba(255,163,0,0.9)';ctx.font=(mob?9:12)+'px "Press Start 2P"';ctx.textAlign='center';
+          ctx.fillText('$',bx+bizW/2,by+bh/2-((animFrame+i*13)%25)*0.4);ctx.textAlign='left';
+        }
+      }
+      if(block.resistant){
+        ctx.fillStyle='rgba(41,173,255,0.2)';ctx.fillRect(bx,by,bizW-2,bh);
+        ctx.strokeStyle='rgba(41,173,255,0.7)';ctx.lineWidth=2;ctx.strokeRect(bx+1,by+1,bizW-4,bh-2);
+        drawGI('fist',bx+bizW/2,by+bh/2,mob?16:22);
+      }
+      // Business name + icon
+      ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(bx+2,by+bh-16,bizW-6,14);
+      ctx.fillStyle='#fff';ctx.font=(mob?8:10)+'px "Press Start 2P"';ctx.textAlign='center';
+      ctx.fillText(block.icon+' '+block.name.substring(0,mob?5:8),bx+bizW/2,by+bh-5);ctx.textAlign='left';
+    }
+    // Sicarios on road
+    const sicCount=Math.min(G.sicarios,mob?2:4);
+    for(let s=0;s<sicCount;s++){
+      const sx=(animFrame*1.2+s*(W/Math.max(sicCount,1)))%W;
+      const sy=s%2===0?roadT-8:roadB+2;
+      pt(...P.sicario,sx,sy,mob?0.8:1.0);
+    }
+    // Income
+    const extInc=calcCostaIncome();
+    if(extInc>0){
+      ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(W-90,(roadT+roadB)/2-8,85,16);
+      ctx.fillStyle='rgba(255,220,100,0.9)';ctx.font=(fs-1)+'px "Press Start 2P"';ctx.textAlign='right';
+      ctx.fillText('+S/'+fmt(extInc)+'/mes',W-8,(roadT+roadB)/2+4);ctx.textAlign='left';
+    }
+    // Empty state
+    if(!G.blocks.some(b=>b.paying||b.resistant)){
+      ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(W*0.15,(roadT+roadB)/2-12,W*0.7,24);
+      ctx.fillStyle='#FF004D';ctx.font=(mob?10:13)+'px "Press Start 2P"';ctx.textAlign='center';
+      ctx.fillText('Envia cartas de cobro',W/2,(roadT+roadB)/2+5);ctx.textAlign='left';
+    }
+    // Flying envelopes
+    for(let e=G.flyingEnvelopes.length-1;e>=0;e--){
+      const env=G.flyingEnvelopes[e];
+      env.progress+=0.03;
+      if(env.progress>=1){G.flyingEnvelopes.splice(e,1);continue;}
+      const ti=env.targetIdx;if(ti>=maxBiz){G.flyingEnvelopes.splice(e,1);continue;}
+      const tRow=ti<3?0:1,tCol=ti%3;
+      const tx2=tCol*bizW+bizW/2,ty2=tRow===0?topEnd/2:botStart+(H-botStart)/2;
+      const startX=W/2,startY=(roadT+roadB)/2;
+      const ex=startX+env.progress*(tx2-startX);
+      const ey=startY+env.progress*(ty2-startY)+Math.sin(env.progress*Math.PI*2)*-8;
+      ctx.fillStyle='#FFF';ctx.fillRect(ex-6,ey-4,12,8);
+      ctx.strokeStyle='#FF004D';ctx.lineWidth=1.5;ctx.strokeRect(ex-6,ey-4,12,8);
+      ctx.beginPath();ctx.moveTo(ex-6,ey-4);ctx.lineTo(ex,ey);ctx.lineTo(ex+6,ey-4);ctx.stroke();
+    }
+    drawParticles();
+    return;
+  }
+  // === FALLBACK: procedural ===
+  const ts=mob?12:16;
+  const sc=ts/16;
+  const topEnd=H*0.35, swTop=topEnd, swTopEnd=H*0.42;
+  const roadTop=swTopEnd, roadBot=H*0.58;
+  const swBotStart=roadBot, swBotEnd=H*0.65, botStart=swBotEnd;
+  const maxBiz=Math.min(G.blocks.length,6);
+  const bizW=W/3;
+  const payingCount=G.blocks.filter(b=>b.paying).length;
+  const chichaPal=[
+    ['#D9A441','#8C6220','#5C3E17'],
+    ['#5FB3C8','#2F6D7C','#203A4A'],
+    ['#E3682A','#8A3B19','#582512'],
+    ['#5FA38F','#2E6B5C','#1D4238'],
+    ['#C86B51','#7E3F2E','#4E241A'],
+    ['#B68E43','#6D5522','#463616']
+  ];
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#E7D7BE');
+  bg.addColorStop(1,'#BFA78B');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  // Sidewalks + road
+  ctx.fillStyle='#A6927B';ctx.fillRect(0,swTop,W,swTopEnd-swTop);
+  ctx.fillStyle='#9C8872';ctx.fillRect(0,swBotStart,W,swBotEnd-swBotStart);
+  drawScatterBlots(0,swTop,W,swTopEnd-swTop,10,['#8B7761','#C1AA8B','#76604F'],41,0.15);
+  drawScatterBlots(0,swBotStart,W,swBotEnd-swBotStart,10,['#8B7761','#C1AA8B','#76604F'],49,0.15);
+  const roadGrd=ctx.createLinearGradient(0,roadTop,0,roadBot);
+  roadGrd.addColorStop(0,'#3C3A38');roadGrd.addColorStop(1,'#232220');
+  ctx.fillStyle=roadGrd;ctx.fillRect(0,roadTop,W,roadBot-roadTop);
+  // Center line + stains
+  ctx.strokeStyle='rgba(214,176,64,0.65)';ctx.lineWidth=2;ctx.setLineDash([14,10]);
+  ctx.beginPath();ctx.moveTo(0,(roadTop+roadBot)/2);ctx.lineTo(W,(roadTop+roadBot)/2);ctx.stroke();ctx.setLineDash([]);
+  drawScatterBlots(0,roadTop,W,roadBot-roadTop,12,['#1F1E1D','#4B433C','#6A5B4B'],57,0.12);
+  function drawBuilding(bx,by,bw,bh,block,bIdx){
+    const pal=chichaPal[bIdx%chichaPal.length];
+    ctx.fillStyle=pal[0];ctx.fillRect(bx,by,bw,bh);
+    ctx.fillStyle='rgba(255,255,255,0.08)';ctx.fillRect(bx,by,bw,10);
+    ctx.fillStyle=pal[1];ctx.fillRect(bx,by+bh-18,bw,18);
+    ctx.fillStyle=pal[2];ctx.fillRect(bx,by+bh-6,bw,6);
+    for(let r=0;r<Math.max(1,Math.floor(bh/30));r++){
+      for(let c=0;c<Math.max(2,Math.floor(bw/28));c++){
+        const wx=bx+10+c*24,wy=by+14+r*22;
+        if(wx+12>bx+bw-6||wy+12>by+bh-26)continue;
+        ctx.fillStyle='#24354D';ctx.fillRect(wx,wy,12,12);
+        ctx.fillStyle='rgba(255,255,255,0.2)';ctx.fillRect(wx+2,wy+2,8,4);
+      }
+    }
+    ctx.fillStyle='#3A2A1A';ctx.fillRect(bx+bw*0.38,by+bh-28,bw*0.24,22);
+    ctx.fillStyle='rgba(0,0,0,0.18)';
+    ctx.beginPath();ctx.moveTo(bx+bw*0.2,by+bh-18);ctx.lineTo(bx+bw*0.8,by+bh-18);ctx.lineTo(bx+bw*0.72,by+bh);ctx.lineTo(bx+bw*0.28,by+bh);ctx.closePath();ctx.fill();
+    if(block.paying){
+      ctx.fillStyle='rgba(255,0,77,0.18)';ctx.fillRect(bx,by,bw,bh);
+      ctx.strokeStyle='rgba(255,0,77,0.7)';ctx.lineWidth=2;ctx.strokeRect(bx,by,bw,bh);
+      if((animFrame+bIdx*13)%50<25){
+        ctx.fillStyle='rgba(255,163,0,0.9)';ctx.font=(mob?8:10)+'px "Press Start 2P"';ctx.textAlign='center';
+        ctx.fillText('$',bx+bw/2,by+bh/2-((animFrame+bIdx*13)%25)*0.5);ctx.textAlign='left';
+      }
+      if(payingCount>4){
+        ctx.fillStyle='rgba(0,0,0,0.22)';
+        ctx.fillRect(bx,by+bh*0.58,bw,bh*0.16);
+      }
+    }
+    if(block.resistant){
+      ctx.fillStyle='rgba(41,173,255,0.15)';ctx.fillRect(bx,by,bw,bh);
+      ctx.strokeStyle='rgba(41,173,255,0.7)';ctx.lineWidth=2;ctx.strokeRect(bx,by,bw,bh);
+      drawGI('fist',bx+bw/2,by+bh/2,mob?14:20);
+    }
+    ctx.fillStyle='rgba(0,0,0,0.72)';ctx.fillRect(bx+4,by+4,bw-8,16);
+    ctx.font=(mob?11:14)+'px "Noto Color Emoji",serif';ctx.textAlign='center';
+    ctx.fillText(block.icon,bx+bw/2,by+15);ctx.textAlign='left';
+    ctx.fillStyle='#F4E7D2';ctx.font=(mob?7:9)+'px "Press Start 2P"';ctx.textAlign='center';
+    ctx.fillText(mob?block.name.substring(0,5):block.name.substring(0,8),bx+bw/2,by+14);ctx.textAlign='left';
+  }
+  for(let i=0;i<3;i++){if(i>=maxBiz)break;drawBuilding(i*bizW,0,bizW-2,topEnd,G.blocks[i],i);}
+  for(let i=0;i<3;i++){const bi=i+3;if(bi>=maxBiz)break;drawBuilding(i*bizW,botStart,bizW-2,H-botStart,G.blocks[bi],bi);}
+  // Postes + cables
+  const posts=[
+    {x:W*0.14,y:swTop-10},{x:W*0.54,y:swTop-8},{x:W*0.86,y:swTop-10},
+    {x:W*0.26,y:swBotStart-8},{x:W*0.68,y:swBotStart-10}
+  ];
+  posts.forEach(p=>drawObjFit(OBJ_POSTE,p.x-12,p.y,28,58));
+  ctx.strokeStyle='rgba(45,35,25,0.75)';ctx.lineWidth=2;
+  for(let i=0;i<posts.length-1;i++){
+    const a=posts[i],b=posts[i+1];
+    ctx.beginPath();ctx.moveTo(a.x,a.y+10);ctx.quadraticCurveTo((a.x+b.x)/2,(a.y+b.y)/2+18,b.x,b.y+12);ctx.stroke();
+  }
+  // Props callejeros
+  drawObjFit(OBJ_ANTICUCHERA,W*0.12,swBotStart-18,54,60);
+  drawObjFit(OBJ_INCAKOLA,W*0.62,swTop-18,28,42);
+  if(payingCount>0)drawObjFit(OBJ_BASURA,W*0.44,swBotStart+6,38,28);
+  if(payingCount>2)drawObjFit(OBJ_LLANTAS,W*0.76,swBotStart+8,36,26);
+  if(payingCount>5)drawObjFit(OBJ_CONO,W*0.18,swTop+2,20,28);
+  if(payingCount>7){
+    ctx.save();
+    ctx.translate(W*0.58,topEnd-8);
+    ctx.rotate(-0.08);
+    ctx.fillStyle='rgba(130,20,16,0.9)';
+    ctx.font=(mob?9:11)+'px "Press Start 2P"';
+    ctx.fillText('PAGA O MUERE',0,0);
+    ctx.restore();
+  }
+  // Vehicles
+  const combiW=mob?40:56,combiH=combiW,motoW=mob?22:32,motoH=motoW;
+  function drawFlipped(img,x,y,w,h,flip){
+    if(!img||!img.complete)return;
+    ctx.save();
+    if(flip){ctx.translate(x+w,y);ctx.scale(-1,1);ctx.drawImage(img,0,0,w,h);}
+    else ctx.drawImage(img,x,y,w,h);
+    ctx.restore();
+  }
+  const combiX=(animFrame*0.6)%(W+combiW)-combiW;
+  drawFlipped(OBJ_COMBI,combiX,roadTop+8,combiW,combiH,true);
+  drawFlipped(OBJ_COMBI,W-(animFrame*0.5)%(W+combiW),roadBot-combiH-10,combiW,combiH,false);
+  const motoX=(animFrame*0.95+W*0.28)%(W+motoW)-motoW;
+  drawFlipped(OBJ_MOTOTAXI,motoX,roadTop+combiH+10,motoW,motoH,true);
+  drawFlipped(OBJ_MOTOTAXI,W-(animFrame*0.72+W*0.24)%(W+motoW),roadBot-motoH-combiH-12,motoW,motoH,false);
+  // Sicarios on sidewalks
+  const sicCount=Math.min(G.sicarios,mob?2:4);
+  for(let s=0;s<sicCount;s++){
+    const sx=(animFrame*1.1+s*(W/Math.max(1,sicCount)))%W;
+    const sy=s%2===0?swTop-20:swBotStart-6;
+    drawObjFit(OBJ_SICARIO,sx-12,sy,24,36);
+  }
+  const extInc=calcCostaIncome();
+  if(extInc>0){ctx.fillStyle='rgba(255,220,100,0.85)';ctx.font=(fs-1)+'px "Press Start 2P"';ctx.textAlign='right';ctx.fillText('+S/'+fmt(extInc)+'/mes',W-6,(roadTop+roadBot)/2);ctx.textAlign='left';}
+  if(!G.blocks.some(b=>b.paying||b.resistant)){
+    ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(W*0.15,(roadTop+roadBot)/2-20,W*0.7,40);
+    ctx.fillStyle='#FF004D';ctx.font=(mob?10:13)+'px "Press Start 2P"';ctx.textAlign='center';
+    ctx.fillText('Envia cartas de cobro',W/2,(roadTop+roadBot)/2+5);ctx.textAlign='left';
+  }
+  // === FLYING ENVELOPES ===
+  for(let e=G.flyingEnvelopes.length-1;e>=0;e--){
+    const env=G.flyingEnvelopes[e];
+    env.progress+=0.03;
+    if(env.progress>=1){G.flyingEnvelopes.splice(e,1);continue;}
+    const ti=env.targetIdx;
+    if(ti>=maxBiz){G.flyingEnvelopes.splice(e,1);continue;}
+    // Target position: building center
+    const tRow=ti<3?0:1, tCol=ti%3;
+    const tx2=tCol*bizW+bizW/2, ty2=tRow===0?topEnd/2:botStart+(H-botStart)/2;
+    // Start from road center
+    const startX=W/2, startY=(roadTop+roadBot)/2;
+    const ex=startX+env.progress*(tx2-startX);
+    const ey=startY+env.progress*(ty2-startY)+Math.sin(env.progress*Math.PI*2)*-8;
+    // Envelope
+    ctx.fillStyle='#FFF';ctx.fillRect(ex-6,ey-4,12,8);
+    ctx.strokeStyle='#FF004D';ctx.lineWidth=1.5;ctx.strokeRect(ex-6,ey-4,12,8);
+    ctx.beginPath();ctx.moveTo(ex-6,ey-4);ctx.lineTo(ex,ey);ctx.lineTo(ex+6,ey-4);ctx.stroke();
+  }
+  drawParticles();
+}
+
+// =============================================
+// SCENE: CONGRESO — Tablero de votación
+// =============================================
+function renderCongreso(){
+  const mob=W<500,fs=mob?9:12,compactMob=mob;
+  const boughtSeats=G.seats.filter(s=>s.bought).length;
+  const pendingLaws=Object.keys(LAWS).filter(k=>!G.lawsPassed[k]).length;
+  const sessionYear=2026+Math.floor(G.month/12);
+  const sessionMonth=MONTHS[G.month%12]||'Ene';
+  // Cream marble background
+  const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#FFF1E8');bg.addColorStop(1,'#C2C3C7');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  // Subtle marble texture
+  ctx.fillStyle='rgba(200,180,150,0.06)';
+  for(let m=0;m<8;m++){
+    ctx.beginPath();ctx.ellipse(Math.sin(m*1.7)*W*0.4+W/2,Math.cos(m*2.3)*H*0.3+H/2,W*0.3,H*0.15,m*0.5,0,Math.PI*2);ctx.fill();
+  }
+  if(TERRAIN_V2&&PLATE_CONGRESS_MARBLE.complete){
+    drawObjCover(PLATE_CONGRESS_MARBLE,0,H*0.58,W,H*0.42,0.96,true);
+    ctx.fillStyle='rgba(255,255,255,0.14)';
+    ctx.fillRect(0,H*0.58,W,H*0.42);
+  }
+  const actaH=compactMob?22:36;
+  ctx.fillStyle='rgba(20,14,10,0.88)';ctx.fillRect(0,0,W,actaH);
+  // stroke removed per feedback
+  ctx.fillStyle='#FFD948';ctx.font=(compactMob?6:9)+'px "Press Start 2P"';
+  ctx.fillText('ACTA DE SESION',8,compactMob?12:actaH-11);
+  ctx.fillStyle='#E8D5B7';ctx.font=(compactMob?8:12)+'px VT323';
+  ctx.fillText(`${sessionMonth} ${sessionYear} · VOTOS ${boughtSeats}/130`,8,compactMob?20:actaH-4);
+  ctx.textAlign='right';
+  ctx.fillStyle=pendingLaws>0?'#FA8132':'#88E060';
+  ctx.fillText(pendingLaws>0?`${pendingLaws} LEYES PEND.`:'AGENDA LIMPIA',W-8,compactMob?14:actaH-6);
+  ctx.textAlign='left';
+  // Bandera del Peru top corners
+  const bdW=mob?20:30,bdH=bdW*60/43;
+  if(!compactMob){
+    drawObj(OBJ_BANDERA,8,actaH+6,bdW,bdH);
+    drawObj(OBJ_BANDERA,W-bdW-8,actaH+6,bdW,bdH);
+  }
+  // Gavel + dossier corners only when the custom podium hero is missing
+  if(!compactMob && !(OBJ_PODIO_CONGRESO.complete&&OBJ_PODIO_CONGRESO.naturalWidth>0)){
+    const gvW=mob?18:26;
+    drawObj(OBJ_GAVEL,8,H-gvW-8,gvW,gvW*46/50);
+    const dsW=mob?16:24,dsH=dsW*60/54;
+    drawObj(OBJ_DOSSIER,W-dsW-8,H-dsH-8,dsW,dsH);
+  }
+  // columns removed per feedback
+  // Passed laws ticker at top
+  const passed=Object.keys(G.lawsPassed);
+  const tickerH=!compactMob&&passed.length>0?(mob?16:22):0;
+  if(tickerH){
+    ctx.fillStyle='rgba(139,0,255,0.08)';ctx.fillRect(0,0,W,tickerH);
+    ctx.shadowColor='#FF00FF';ctx.shadowBlur=4;
+    ctx.fillStyle='rgba(200,0,200,0.8)';ctx.font=(mob?8:10)+'px "Press Start 2P"';
+    const txt='★ LEYES: '+passed.map(k=>LAWS[k]?.num||k).join(' ★ ');
+    ctx.fillText(txt,10-((animFrame*0.8)%(txt.length*7)),tickerH-4);ctx.shadowBlur=0;
+  }
+  // VOTING BOARD: 13 columns x 10 rows = 130 cells
+  const gridCols=13,gridRows=10;
+  const gridPad=compactMob?4:14;
+  const legendH=compactMob?34:52;
+  const headerBottom=compactMob?(actaH+4):(actaH+bdH+8);
+  const gridTop=Math.max(headerBottom,tickerH+gridPad);
+  const gridAvailH=H-gridTop-legendH-gridPad-(compactMob?3:6);
+  const gridAvailW=W-gridPad*2;
+  const cellW=Math.floor(gridAvailW/gridCols);
+  const cellH=Math.floor(gridAvailH/gridRows);
+  const cellSz=Math.min(cellW,cellH);
+  const gridW=cellSz*gridCols,gridH=cellSz*gridRows;
+  const gridX=(W-gridW)/2,gridY=gridTop;
+  // Draw grid frame
+  ctx.strokeStyle='rgba(100,80,60,0.2)';ctx.lineWidth=1;
+  ctx.strokeRect(gridX-1,gridY-1,gridW+2,gridH+2);
+  // Store grid geometry for tooltip hit-testing
+  congresoGrid={gridX,gridY,cellSz,gridCols,gridRows};
+  // Draw cells — 3 clear states: BOUGHT (bright color + badge), AVAILABLE (beige + dim badge), OPPOSITION (dark + X)
+  const iconSz=Math.max(mob?cellSz*0.55:cellSz*0.5,10);
+  const badgeSz=Math.round(iconSz*0.7);
+  G.seats.forEach((seat,i)=>{
+    if(i>=gridCols*gridRows)return;
+    const col=i%gridCols,row=Math.floor(i/gridCols);
+    const cx2=gridX+col*cellSz,cy2=gridY+row*cellSz;
+    const gap=Math.max(1,cellSz>8?2:1);
+    const midX=cx2+cellSz/2,midY=cy2+cellSz/2;
+    const party=seat.partyIdx>=0?PARTIES[seat.partyIdx]:null;
+    const inner=cellSz-gap*2;
+    if(seat.bought){
+      // BOUGHT: bright party color, party logo, golden border
+      ctx.fillStyle=party?party.color:'#96704A';
+      ctx.fillRect(cx2+gap,cy2+gap,inner,inner);
+      // Pulse highlight
+      const pulse=Math.sin(animFrame*0.06+i*0.3)*0.12+0.15;
+      ctx.fillStyle='rgba(255,255,255,'+String(pulse)+')';
+      ctx.fillRect(cx2+gap,cy2+gap,inner,inner);
+      // Gold border
+      ctx.strokeStyle='#FFD948';ctx.lineWidth=mob?1:1.5;
+      ctx.strokeRect(cx2+gap+0.5,cy2+gap+0.5,inner-1,inner-1);
+      // Party logo (fallback to badge letter if not loaded)
+      const logoImg=!compactMob&&party?PARTY_LOGOS[party.logo]:null;
+      if(logoImg&&logoImg.complete&&logoImg.naturalWidth>0){
+        ctx.drawImage(logoImg,cx2+gap+1,cy2+gap+1,inner-2,inner-2);
+      }else if(party&&party.badge){
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.font='bold '+badgeSz+'px "Press Start 2P",monospace';
+        ctx.fillStyle=party.badgeColor||'#fff';
+        ctx.fillText(party.badge,midX,midY+1);
+      }
+    } else if(seat.partyIdx===-1){
+      // OPPOSITION: dark slate, subtle X
+      ctx.fillStyle='#1D2B53';
+      ctx.fillRect(cx2+gap,cy2+gap,inner,inner);
+      // Border
+      ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=0.5;
+      ctx.strokeRect(cx2+gap+0.5,cy2+gap+0.5,inner-1,inner-1);
+      // X mark
+      ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(cx2+gap+3,cy2+gap+3);ctx.lineTo(cx2+cellSz-gap-3,cy2+cellSz-gap-3);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(cx2+cellSz-gap-3,cy2+gap+3);ctx.lineTo(cx2+gap+3,cy2+cellSz-gap-3);ctx.stroke();
+    } else {
+      // AVAILABLE: warm beige, dim badge — clearly "empty slot"
+      ctx.fillStyle='#D3BF8F';
+      ctx.fillRect(cx2+gap,cy2+gap,inner,inner);
+      // Subtle party tint
+      if(party){
+        ctx.fillStyle=party.color;ctx.globalAlpha=0.1;
+        ctx.fillRect(cx2+gap,cy2+gap,inner,inner);
+        ctx.globalAlpha=1;
+      }
+      // Border
+      ctx.strokeStyle='#B1A077';ctx.lineWidth=0.5;
+      ctx.strokeRect(cx2+gap+0.5,cy2+gap+0.5,inner-1,inner-1);
+      // Dim badge
+      if(party&&party.badge){
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.font='bold '+badgeSz+'px "Press Start 2P",monospace';
+        ctx.fillStyle='rgba(58,42,26,0.25)';
+        ctx.fillText(party.badge,midX,midY+1);
+      }
+    }
+    ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  });
+  for(let i=G.seats.length;i<gridCols*gridRows;i++){
+    const col=i%gridCols,row=Math.floor(i/gridCols);
+    const cx2=gridX+col*cellSz,cy2=gridY+row*cellSz;
+    const gap=Math.max(1,cellSz>8?2:1);
+    ctx.fillStyle='#3A3A3A';
+    ctx.fillRect(cx2+gap,cy2+gap,cellSz-gap*2,cellSz-gap*2);
+  }
+  // Legend below grid
+  const lgY=gridY+gridH+6;
+  const allParties=[...PARTIES.map((p,i)=>({icon:p.icon,badge:p.badge,name:p.name,color:p.color,b:G.seats.filter(s=>s.partyIdx===i&&s.bought).length,tot:G.seats.filter(s=>s.partyIdx===i).length})),{icon:'?',badge:'OP',name:'Oposicion',color:'#888888',b:G.seats.filter(s=>s.partyIdx===-1&&s.bought).length,tot:G.seats.filter(s=>s.partyIdx===-1).length}];
+  const lgCols=compactMob?3:3,lgRowH2=compactMob?9:16;
+  const lgColW=Math.floor((W-12)/lgCols);
+  ctx.fillStyle='#D8CCAE';ctx.fillRect(4,lgY,W-8,legendH-4);
+  ctx.strokeStyle='#B1A077';ctx.lineWidth=1;ctx.strokeRect(4,lgY,W-8,legendH-4);
+  const lgFont=compactMob?'6px "Press Start 2P"':'10px monospace';
+  const sqSz=compactMob?6:10;
+  allParties.forEach((p,i)=>{
+    const col=i%lgCols,row=Math.floor(i/lgCols);
+    const px=8+col*lgColW,py=lgY+4+row*lgRowH2;
+    // Colored square
+    ctx.fillStyle=p.color;ctx.fillRect(px,py,sqSz,sqSz);
+    if(p.b>0){ctx.strokeStyle='#FFD948';ctx.lineWidth=1;ctx.strokeRect(px,py,sqSz,sqSz);}
+    // Party label
+    ctx.fillStyle=p.b>0?'#3A2A1A':'#9C8B68';ctx.font=lgFont;
+    const nm=compactMob?(p.badge||p.name.substring(0,3)):p.name.substring(0,12);
+    ctx.fillText(nm,px+sqSz+3,py+(compactMob?6:8));
+    // Count
+    ctx.fillStyle=p.b>0?'#FA8132':'#8F7E5D';
+    ctx.fillText(p.b+'/'+p.tot,px+lgColW-(compactMob?20:35),py+(compactMob?6:8));
+  });
+  if(!compactMob){
+    if(false){
+      // podio congreso asset removed per feedback
+      const podBoxW=mob?80:126,podBoxH=mob?58:92;
+      drawObjFit(OBJ_PODIO_CONGRESO,W/2-podBoxW/2,H-podBoxH-4,podBoxW,podBoxH);
+    }else{
+      const podW=mob?50:80,podH2=mob?16:22;
+      const podX=W/2-podW/2,podY2=H-podH2-4;
+      oRect(podX,podY2,podW,podH2,'#4A3520');
+      ctx.fillStyle='#FFEC27';ctx.fillRect(podX+3,podY2+2,podW-6,2);ctx.fillRect(podX+3,podY2+podH2-4,podW-6,2);
+      ctx.font=(mob?14:20)+'px "Noto Color Emoji",serif';ctx.textAlign='center';ctx.fillText('🇵🇪',W/2,podY2-2);ctx.textAlign='left';
+    }
+  }
+  drawParticles();
+}
+
+// =============================================
+// RENDER LOOP
+// =============================================
+function renderLoop(){
+  if(!G.running||document.hidden){renderId=0;return;}
+  if(!W||!H){renderId=requestAnimationFrame(renderLoop);return;}
+  animFrame++;updateParticles();
+  ctx.clearRect(0,0,W,H);
+  switch(currentView){
+    case'mineria':renderMineria();break;case'narco':renderNarco();break;
+    case'extorsion':renderExtorsion();break;case'congreso':renderCongreso();break;
+  }
+  if(PROCEDURAL_V2){
+    ctx.fillStyle='rgba(0,0,0,0.72)';
+    ctx.fillRect(W-132,H-20,126,14);
+    ctx.fillStyle='#7CFC00';
+    ctx.font='8px "Press Start 2P"';
+    ctx.textAlign='right';
+    ctx.fillText('PROCEDURAL V2',W-10,H-10);
+    ctx.textAlign='left';
+  }else if(TERRAIN_V2){
+    ctx.fillStyle='rgba(0,0,0,0.72)';
+    ctx.fillRect(W-104,H-20,98,14);
+    ctx.fillStyle='#FFD948';
+    ctx.font='8px "Press Start 2P"';
+    ctx.textAlign='right';
+    ctx.fillText('TERRAIN V2',W-10,H-10);
+    ctx.textAlign='left';
+  }
+  renderId=requestAnimationFrame(renderLoop);
+}
+
+// =============================================
+// SIDE PANELS
+// =============================================
+let lastPanelHtml='';
+let lastPanelView='';
+function updateSidePanel(force){
+  const sp=document.getElementById('drawer-content');
+  let html='';
+  switch(currentView){
+    case'mineria':html=mineriaPanel();break;case'narco':html=narcoPanel();break;
+    case'extorsion':html=extorsionPanel();break;case'congreso':html=congresoPanel();break;
+  }
+  if(!force&&html===lastPanelHtml)return;
+  const prevScroll=currentView===lastPanelView?sp.scrollTop:0;
+  sp.innerHTML=html;
+  sp.scrollTop=prevScroll;
+  lastPanelHtml=html;
+  lastPanelView=currentView;
+}
+function mineriaPanel(){
+  const a=G.mines.length,inc=G.mines.reduce((s,m)=>s+m.output,0),hg=G.mines.filter(m=>m.mercury).length,up=G.mines.filter(m=>m.upgraded).length;
+  return`<div class="panel-box"><div class="panel-title" ><img src="gi/mining.png" class="gi" style="width:16px;height:16px"> MINERÍA ILEGAL</div>
+<button class="action-btn" onclick="act('mineria','claim')">Reclamar concesión REINFO<span class="cost">S/ 5K</span></button>
+<button class="action-btn" onclick="act('mineria','upgrade')">Maquinaria pesada<span class="cost">S/ 15K</span></button>
+<button class="action-btn" onclick="act('mineria','mercury')">Usar mercurio (+80%)<span class="risk">☠️</span></button>
+<button class="action-btn" onclick="act('mineria','bribe')">Sobornar fiscalizador<span class="cost">S/ 8K</span></button></div>
+<div class="panel-box"><div class="panel-title" ><img src="gi/gold-nuggets.png" class="gi" style="width:16px;height:16px"> PRODUCCIÓN</div><div class="stats-text">
+<span class="label">Minas:</span> <span class="val">${a}/12</span> · <span class="label">Maquinaria:</span> <span class="val">${up}</span><br>
+<span class="label">Mercurio:</span> <span class="val-red">${hg}</span><br>
+<span class="label">Oro/mes:</span> <span class="val-gold">S/ ${fmt(inc)}</span></div></div>`;
+}
+function narcoPanel(){
+  // Capacity warnings
+  const cocaN=G.cocaFields.length,labsN=G.labs.length,rutasN=G.routes.length;
+  const labsActive=Math.min(labsN*3,cocaN);
+  const rutasActive=Math.min(rutasN*2,labsN);
+  const labsCap=labsN>0&&labsActive<labsN*3?` <span class="val-red">(${labsActive}/${labsN*3} activos: faltan ${(labsN*3)-cocaN} ha coca)</span>`:'';
+  const rutasCap=rutasN>0&&rutasActive<rutasN*2?` <span class="val-red">(${rutasActive}/${rutasN*2} activos: faltan ${(rutasN*2)-labsN} labs)</span>`:'';
+  return`<div class="panel-box"><div class="panel-title" ><img src="gi/chemical-drop.png" class="gi" style="width:16px;height:16px"> NARCOTRÁFICO</div>
+<button class="action-btn" onclick="act('narco','coca')">Plantar coca (1 ha)<span class="cost">S/ 3K</span></button>
+<button class="action-btn" onclick="act('narco','lab')">Instalar laboratorio<span class="cost">S/ 20K</span><span class="law-name">Necesita 3 ha coca por lab</span></button>
+<button class="action-btn" onclick="act('narco','route')">Abrir ruta<span class="cost">S/ 12K</span><span class="law-name">Necesita 1 lab por cada 2 rutas</span></button>
+<button class="action-btn" onclick="act('narco','bribe')">Sobornar policía<span class="cost">S/ 6K</span></button></div>
+<div class="panel-box"><div class="panel-title" ><img src="gi/chemical-drop.png" class="gi" style="width:16px;height:16px"> CADENA</div><div class="stats-text">
+<span class="label">Coca:</span> <span class="val">${cocaN} ha</span> · <span class="label">Labs:</span> <span class="val">${labsN}</span>${labsCap}<br>
+<span class="label">Rutas:</span> <span class="val">${rutasN}</span>${rutasCap}<br>
+<span class="label">Ingreso:</span> <span class="val-gold">S/ ${fmt(calcSelvaIncome())}/mes</span><br>
+${cocaN?'🌿':'⬜'}→${labsN?'🧪':'⬜'}→${rutasN?'✈️':'⬜'}</div></div>`;
+}
+function extorsionPanel(){
+  const p=G.blocks.filter(b=>b.paying).length;
+  return`<div class="panel-box"><div class="panel-title" ><img src="gi/pistol-gun.png" class="gi" style="width:16px;height:16px"> EXTORSIÓN</div>
+<button class="action-btn" onclick="act('extorsion','extort')">Carta de cobro<span class="cost">S/ 1K</span></button>
+<button class="action-btn" onclick="act('extorsion','intimidate')">Intimidar<span class="risk">⚠️</span></button>
+<button class="action-btn" onclick="act('extorsion','sicario')">Contratar sicario<span class="cost">S/ 10K</span></button>
+<button class="action-btn" onclick="act('extorsion','launder')">Negocio fachada<span class="cost">S/ 25K</span></button></div>
+<div class="panel-box"><div class="panel-title" ><img src="gi/pistol-gun.png" class="gi" style="width:16px;height:16px"> TERRITORIO</div><div class="stats-text">
+<span class="label">Pagando:</span> <span class="val">${p}/12</span> · <span class="label">Resisten:</span> <span class="val-red">${G.blocks.filter(b=>b.resistant).length}</span><br>
+<span class="label">Cobro:</span> <span class="val-gold">S/ ${fmt(calcCostaIncome())}/mes</span><br>
+<span class="label">Sicarios:</span> <span class="val-red">${G.sicarios}</span></div></div>`;
+}
+function congresoPanel(){
+  const b=G.seats.filter(s=>s.bought).length;
+  const pactoLeft=G.seats.filter(s=>!s.bought&&s.partyIdx>=0).length;
+  const oppLeft=G.seats.filter(s=>!s.bought&&s.indie).length;
+  let lawBtns='';
+  Object.entries(LAWS).forEach(([key,law])=>{
+    const passed=G.lawsPassed[key];
+    lawBtns+=`<button class="action-btn" onclick="act('congreso','law_${key}')" ${passed?'disabled':''}>${passed?'✅ ':''}<b>${law.name}</b><span class="cost">${passed?'APROBADA':law.need+' cong.'}</span><span class="law-name">${law.num} — ${law.desc.substring(0,50)}...</span></button>`;
+  });
+  return`<div class="panel-box"><div class="panel-title" ><img src="gi/capitol.png" class="gi" style="width:16px;height:16px"> COMPRAR PODER</div>
+<button class="action-btn" onclick="act('congreso','buy')" ${pactoLeft===0?'disabled':''}>Comprar congresista del pacto<span class="cost">S/ 30K</span><span class="law-name">${pactoLeft} disponibles. S/ 2K/mes c/u. Tienes ${b} = S/ ${b*2}K/mes</span></button>
+<button class="action-btn" onclick="act('congreso','buyOpp')" ${oppLeft===0?'disabled':''}>Comprar opositor<span class="cost">S/ 60K</span><span class="law-name">${oppLeft} opositores. Cuesta el doble. S/ 3K/mes c/u</span></button>
+<button class="action-btn" onclick="act('congreso','judge')">Sobornar juez<span class="cost">S/ 40K</span><span class="law-name">Costo fijo: S/ 3K/mes por juez. Tienes ${G.judges} = S/ ${G.judges*3}K/mes</span></button>
+<button class="action-btn" onclick="act('congreso','media')">Comprar medio<span class="cost">S/ 50K</span><span class="law-name">Costo fijo: S/ 4K/mes por medio. Tienes ${G.media} = S/ ${G.media*4}K/mes</span></button></div>
+<div class="panel-box"><div class="panel-title" ><img src="gi/handcuffs.png" class="gi" style="width:16px;height:16px"> CONTENER AMENAZAS</div>
+<button class="action-btn" onclick="act('congreso','chicha')">Los Diarios Chicha<span class="cost">S/ 30K</span><span class="law-name">Tabloides de propaganda. -10 prensa, +4 pueblo</span></button>
+<button class="action-btn" onclick="act('congreso','bots')">La Granja de Trolls<span class="cost">S/ 12K</span><span class="law-name">Ejército de bots en redes. -5 prensa, -3 pueblo</span></button>
+<button class="action-btn" onclick="act('congreso','querella')">La Querella del Silencio<span class="cost">S/ 15K</span><span class="law-name">Demanda SLAPP al periodista. -8 prensa, +5 pueblo</span></button>
+<button class="action-btn" onclick="act('congreso','terruqueo')">Terruquear<span class="risk">🎲</span><span class="law-name">Llamar terroristas a los que protestan. 70%: -5 pueblo. 30%: +10</span></button>
+<button class="action-btn" onclick="act('congreso','cancha')">Plata Como Cancha<span class="cost">S/ 15K</span><span class="law-name">Repartir billetes. -6 pueblo, +4 fiscal</span></button>
+<button class="action-btn" onclick="act('congreso','galletitas')">Capturar Programas Sociales<span class="cost">10 cong.</span><span class="law-name">Pensión 65, Juntos, Qali Warma. -8 pueblo, +5 prensa</span></button>
+<button class="action-btn" onclick="act('congreso','ronderos')">Comprar Dirigentes Sociales<span class="cost">S/ 20K</span><span class="law-name">Cabecillas comprados con plata o cargos. -10 pueblo (temporal)</span></button>
+<button class="action-btn" onclick="act('congreso','emergencia')">El Toque de Queda Indefinido<span class="cost">15 cong.</span><span class="law-name">Estado de emergencia. -15 pueblo ahora, +25 en 3 meses</span></button>
+<button class="action-btn" onclick="act('congreso','prescribir')">La Lenta Agonía Procesal<span class="cost">2 jueces</span><span class="law-name">Dilatar hasta prescripción. -8 fiscal</span></button>
+<button class="action-btn" onclick="act('congreso','testigo')">El Testigo Arrepentido<span class="cost">S/ 15K</span><span class="law-name">Intimidar testigo. -6 fiscal, +3 prensa</span></button>
+<button class="action-btn" onclick="act('congreso','rotarfiscal')">Rotar al Fiscal Incómodo<span class="cost">S/ 25K</span><span class="law-name">Cambiar fiscal del caso. -10 fiscal</span></button></div>
+<div class="panel-box"><div class="panel-title" ><img src="gi/scroll-unfurled.png" class="gi" style="width:16px;height:16px"> PROYECTO DE LEY</div>${lawBtns}</div>
+<div class="panel-box"><div class="panel-title" ><img src="gi/capitol.png" class="gi" style="width:16px;height:16px"> PACTO</div><div class="stats-text">
+<span class="label">Congresistas:</span> <span class="val-gold">${b}/130</span><br>
+<span class="label">Jueces:</span> <span class="val">${G.judges}</span> · <span class="label">Medios:</span> <span class="val">${G.media}</span><br>
+<span class="label">Leyes:</span> <span class="val-gold">${Object.keys(G.lawsPassed).length}/8</span>
+${G.delayedEffects.length?'<br><span class="val-red">⏳ '+G.delayedEffects.length+' efectos pendientes</span>':''}
+</div></div>`;
+}
+
+// =============================================
+// ACTIONS
+// =============================================
+function act(v,a){
+  switch(v){case'mineria':mineriaAct(a);break;case'narco':narcoAct(a);break;case'extorsion':extorsionAct(a);break;case'congreso':congresoAct(a);break;}
+  if(checkEndConditions())return;
+  updateSidePanel();updateTopBar();updateThreats();updateMoneyFlow();
+}
+function mineriaAct(a){
+  if(a==='claim'){if(G.money<5000)return log('No tienes S/ 5K','bad');if(G.mines.length>=12)return log('Max concesiones','bad');G.money-=5000;const i=G.mines.length;G.mines.push({active:true,upgraded:false,mercury:false,output:3000+Math.random()*2000,idx:i});G.fiscal+=2;G.pueblo+=1;log(`REINFO: ${MINE_NAMES[i%12]}`,'good');}
+  else if(a==='upgrade'){if(G.money<15000)return log('No tienes S/ 15K','bad');const m=G.mines.find(m=>!m.upgraded);if(!m)return log('Nada que mejorar','bad');G.money-=15000;m.upgraded=true;m.output*=2.5;G.pueblo+=3;log('Maquinaria x2.5','good');}
+  else if(a==='mercury'){const m=G.mines.find(m=>!m.mercury);if(!m)return log('Sin minas','bad');m.mercury=true;m.output*=1.8;G.prensa+=4;G.pueblo+=3;G.fiscal+=2;log('Mercurio — +80% oro, ríos muertos','danger');}
+  else if(a==='bribe'){if(G.money<8000)return log('No tienes S/ 8K','bad');G.money-=8000;G.fiscal=Math.max(0,G.fiscal-8);log('Fiscalizador sobornado -8','info');}
+}
+function narcoAct(a){
+  if(a==='coca'){if(G.money<3000)return log('No tienes S/ 3K','bad');G.money-=3000;G.cocaFields.push({});G.pueblo+=1;log(`Coca: ${G.cocaFields.length} ha`,'good');}
+  else if(a==='lab'){if(G.money<20000)return log('No tienes S/ 20K','bad');if(G.cocaFields.length<2)return log('Necesitas 2+ ha coca','bad');G.money-=20000;G.labs.push({});G.fiscal+=4;G.prensa+=2;log(`Lab #${G.labs.length}`,'good');}
+  else if(a==='route'){if(G.money<12000)return log('No tienes S/ 12K','bad');if(G.labs.length<1)return log('Necesitas 1+ lab','bad');G.money-=12000;G.routes.push({});G.fiscal+=3;log(`Ruta #${G.routes.length}`,'good');}
+  else if(a==='bribe'){if(G.money<6000)return log('No tienes S/ 6K','bad');G.money-=6000;G.fiscal=Math.max(0,G.fiscal-5);log('Policía sobornada -5','info');}
+}
+function extorsionAct(a){
+  if(a==='extort'){if(G.money<1000)return log('No tienes S/ 1K','bad');const b=G.blocks.find(b=>!b.extorted&&!b.resistant);if(!b)return log('Sin negocios','bad');G.money-=1000;
+    // Spawn flying envelope animation
+    const bi=G.blocks.indexOf(b);
+    G.flyingEnvelopes.push({x:0,y:0,targetIdx:bi,progress:0});
+    if(Math.random()<0.2){b.resistant=true;G.pueblo+=3;log(`${b.name} RESISTE`,'bad');}else{b.extorted=true;b.paying=true;G.pueblo+=1;log(`${b.name}: S/${b.inc}/mes`,'good');}}
+  else if(a==='intimidate'){const b=G.blocks.find(b=>b.resistant);if(!b)return log('Nadie resiste','bad');b.resistant=false;b.extorted=true;b.paying=true;G.pueblo+=4;G.prensa+=3;log(`${b.name} intimidado`,'danger');}
+  else if(a==='sicario'){if(G.money<10000)return log('No tienes S/ 10K','bad');G.money-=10000;G.sicarios++;G.fiscal+=5;G.prensa+=3;G.pueblo+=4;log(`Sicario #${G.sicarios}`,'danger');}
+  else if(a==='launder'){if(G.money<25000)return log('No tienes S/ 25K','bad');G.money-=25000;G.laundering++;G.fiscal=Math.max(0,G.fiscal-6);log('Lavado activo -6 fiscal','info');}
+}
+function congresoAct(a){
+  const bought=G.seats.filter(s=>s.bought).length;
+  if(a==='buy'){if(G.money<30000)return log('No tienes S/ 30K','bad');const avail=G.seats.filter(s=>!s.bought&&s.partyIdx>=0);if(!avail.length)return log('Sin congresistas del pacto','bad');const s=avail[Math.floor(Math.random()*avail.length)];G.money-=30000;s.bought=true;const pn=PARTIES[s.partyIdx].icon;log(`${pn} ${PARTIES[s.partyIdx].name} comprado (${bought+1})`,'good');}
+  else if(a==='buyOpp'){if(G.money<60000)return log('No tienes S/ 60K','bad');const avail=G.seats.filter(s=>!s.bought&&s.indie);if(!avail.length)return log('Sin opositores','bad');const s=avail[Math.floor(Math.random()*avail.length)];G.money-=60000;s.bought=true;G.prensa+=2;log(`🐀 Opositor comprado (${bought+1})`,'good');}
+  else if(a==='judge'){if(G.money<40000)return log('No tienes S/ 40K','bad');G.money-=40000;G.judges++;G.fiscal=Math.max(0,G.fiscal-12);log(`Juez #${G.judges} comprado`,'good');}
+  else if(a==='media'){if(G.money<50000)return log('No tienes S/ 50K','bad');G.money-=50000;G.media++;G.prensa=Math.max(0,G.prensa-15);log(`Medio #${G.media} controlado`,'good');}
+  else if(a==='chicha'){if(G.money<30000)return log('No tienes S/ 30K','bad');G.money-=30000;G.prensa=Math.max(0,G.prensa-10);G.pueblo+=4;log('📰 Los Diarios Chicha circulan','info');}
+  else if(a==='bots'){if(G.money<12000)return log('No tienes S/ 12K','bad');G.money-=12000;G.prensa=Math.max(0,G.prensa-5);G.pueblo=Math.max(0,G.pueblo-3);log('🤖 La Granja de Trolls activada','info');}
+  else if(a==='querella'){if(G.money<15000)return log('No tienes S/ 15K','bad');G.money-=15000;G.prensa=Math.max(0,G.prensa-8);G.pueblo+=5;log('⚖️ La Querella del Silencio: periodista demandado','info');}
+  else if(a==='terruqueo'){
+    if(G.cooldowns.terruqueo>G.month)return log('Terruqueo en cooldown. Espera unos meses.','bad');
+    G.cooldowns.terruqueo=G.month+4;
+    if(Math.random()<0.7){G.pueblo=Math.max(0,G.pueblo-5);log('👻 Terruqueados: protesta deslegitimada','good');}
+    else{G.pueblo+=10;G.prensa+=4;log('👻 Terruqueo expuesto: pueblo furioso','bad');}
+  }
+  else if(a==='cancha'){if(G.money<15000)return log('No tienes S/ 15K','bad');G.money-=15000;G.pueblo=Math.max(0,G.pueblo-6);G.fiscal+=4;log('💵 Plata Como Cancha: billetes repartidos','good');}
+  else if(a==='galletitas'){
+    if(bought<10)return log('Necesitas 10 congresistas','bad');
+    if(G.cooldowns.galletitas>G.month)return log('Programas sociales ya capturados. Espera.','bad');
+    G.cooldowns.galletitas=G.month+6;
+    G.pueblo=Math.max(0,G.pueblo-8);G.prensa+=5;
+    log('🍪 Programas sociales capturados: Pensión 65 amenazada','info');
+  }
+  else if(a==='ronderos'){if(G.money<20000)return log('No tienes S/ 20K','bad');G.money-=20000;G.pueblo=Math.max(0,G.pueblo-10);
+    G.delayedEffects.push({monthsLeft:4,type:'ronderos_expire'});
+    log('🛡️ Dirigentes comprados (-10 pueblo, vuelve en 4 meses)','good');}
+  else if(a==='emergencia'){
+    if(bought<15)return log('Necesitas 15 congresistas','bad');
+    if(G.cooldowns.emergencia>G.month)return log('Toque de queda aún activo en cooldown.','bad');
+    G.cooldowns.emergencia=G.month+8;
+    G.pueblo=Math.max(0,G.pueblo-15);G.prensa+=12;
+    G.delayedEffects.push({monthsLeft:3,type:'emergencia_rebote'});
+    log('🚨 El Toque de Queda Indefinido: -15 pueblo, prensa +12','danger');
+  }
+  else if(a==='prescribir'){
+    if(G.judges<2)return log('Necesitas 2 jueces comprados','bad');
+    if(G.cooldowns.prescribir>G.month)return log('Procesos ya en dilación. Espera.','bad');
+    G.cooldowns.prescribir=G.month+5;
+    G.fiscal=Math.max(0,G.fiscal-8);
+    log('⏳ La Lenta Agonía Procesal: casos prescriben','info');
+  }
+  else if(a==='testigo'){if(G.money<15000)return log('No tienes S/ 15K','bad');G.money-=15000;G.fiscal=Math.max(0,G.fiscal-6);G.prensa+=3;log('🤐 El Testigo Arrepentido se retracta','info');}
+  else if(a==='rotarfiscal'){if(G.money<25000)return log('No tienes S/ 25K','bad');G.money-=25000;G.fiscal=Math.max(0,G.fiscal-10);log('🔄 Fiscal Incómodo rotado de caso','info');}
+  else if(a.startsWith('law_')){
+    const key=a.replace('law_','');const law=LAWS[key];if(!law)return;
+    if(G.lawsPassed[key])return log('Ya aprobada','bad');
+    if(bought<law.need)return log(`Necesitas ${law.need} congresistas`,'bad');
+    G.lawsPassed[key]=true;
+    G.fiscal=Math.max(0,G.fiscal-law.fiscalD);G.prensa+=law.prensaU;G.pueblo+=law.puebloU;
+    log(`📜 APROBADA: ${law.name} (${law.num})`,'danger');
+    for(let i=0;i<40;i++)spawnParticle(W/2+Math.random()*100-50,H*0.4,Math.random()*4-2,-2-Math.random()*3,30,'rgba(255,217,72,0.9)',4);
+    // Juice: full-screen yellow flash
+    document.body.classList.remove('law-flash');void document.body.offsetWidth;document.body.classList.add('law-flash');
+    // Show act-banner-style notification
+    showActBanner('LEY APROBADA',law.name);
+  }
+}
+
+// =============================================
+// INCOME
+// =============================================
+function calcSierraIncome(){return G.mines.reduce((s,m)=>s+m.output,0);}
+function calcSelvaIncome(){return G.cocaFields.length*2000+Math.min(G.labs.length*3,G.cocaFields.length)*8000+Math.min(G.routes.length*2,G.labs.length)*15000;}
+function calcCostaIncome(){return G.blocks.reduce((s,b)=>s+(b.paying?b.inc:0),0);}
+function calcExpenses(){return G.sicarios*3000+G.seats.filter(s=>s.bought&&s.partyIdx>=0).length*2000+G.seats.filter(s=>s.bought&&s.indie).length*3000+G.judges*3000+G.media*4000;}
+// Single source of truth: gastos efectivos del mes actual con luna de miel aplicada
+function getCurrentExpenses(){
+  const mult=G.month<7?0.3:1;
+  return Math.round(calcExpenses()*mult);
+}
+// Pick a random bought seat (no bias to first party)
+function pickRandomBoughtSeat(){
+  const bought=G.seats.filter(s=>s.bought);
+  if(!bought.length)return null;
+  return bought[Math.floor(Math.random()*bought.length)];
+}
+
+// =============================================
+// TICK
+// =============================================
+let tickInterval;
+function gameTick(){
+  if(!G.running)return;
+  G.month++;G.monthsAlive++;
+  // Idle protection: getCurrentExpenses() aplica luna de miel (30% mes 1-6)
+  const si=calcSierraIncome(),se=calcSelvaIncome(),co=calcCostaIncome(),la=G.laundering*5000;
+  const ti=si+se+co+la,te=getCurrentExpenses();
+  G.lastIncome=ti;G.lastExpense=te;G.money+=ti-te;G.totalStolen+=ti;
+  // Passive threats — baseline + activity-driven (uniform pressure, sin escalación dramática)
+  const baseline=G.month<9?0.5:1.2;
+  let fUp=baseline+G.mines.length*0.3+G.labs.length*0.5+G.routes.length*0.4+G.sicarios*0.6;
+  let pUp=baseline+G.mines.filter(m=>m.mercury).length*0.5+G.routes.length*0.3+G.sicarios*0.5;
+  let puUp=baseline+G.mines.filter(m=>m.upgraded).length*0.3+G.blocks.filter(b=>b.paying).length*0.2+G.sicarios*0.4;
+  if(G.lawsPassed.colaboracion)fUp*=0.7;
+  if(G.lawsPassed.crimen)fUp*=0.8;
+  if(G.lawsPassed.confianza)puUp*=0.8;
+  G.fiscal+=fUp;G.prensa+=pUp;G.pueblo+=puUp;
+  G.fiscal=Math.max(0,G.fiscal-G.judges*1.5);G.prensa=Math.max(0,G.prensa-G.media*2);
+  if(G.lawsPassed.extincion)G.money+=Math.round(ti*0.1);
+  // Threat threshold flashes — visceral feedback
+  ['fiscal','prensa','pueblo'].forEach(t=>{
+    const v=G[t],prev=G['_prev_'+t]||0;
+    if((prev<50&&v>=50)||(prev<75&&v>=75)||(prev<90&&v>=90)){
+      const el=document.getElementById(t+'-bar');
+      if(el){const par=el.closest('.threat');if(par){par.classList.remove('flash');void par.offsetWidth;par.classList.add('flash');}}
+    }
+    G['_prev_'+t]=v;
+  });
+  // Gino Costa cameos — embedded campaign message
+  const bought=G.seats.filter(s=>s.bought).length;
+  if(G.pueblo>=60)ginoCameo('marcha','El pueblo pide cerrar este Congreso. Gino Costa lo denuncia en la prensa.');
+  if(bought>=20)ginoCameo('20cong','Son 20 congresistas comprados por el pacto. El 12 de abril decidimos.');
+  if(G.lawsPassed.fiscalia)ginoCameo('fiscalia','La captura de la Fiscalía es la captura del Perú. Gino Costa lo expone.');
+  if(G.lawsPassed.reinfo)ginoCameo('reinfo','Otra extensión del REINFO. Otro escudo para la minería ilegal.');
+  if(G.totalStolen>=500000)ginoCameo('500k','Medio millón robado. Gino Costa lo denuncia: el pacto tiene precio.');
+  // Process delayed effects
+  for(let i=G.delayedEffects.length-1;i>=0;i--){
+    G.delayedEffects[i].monthsLeft--;
+    if(G.delayedEffects[i].monthsLeft<=0){
+      const eff=G.delayedEffects[i];
+      if(eff.type==='emergencia_rebote'){G.pueblo+=25;log('🔥 Rebote del Toque de Queda: +25 pueblo','danger');}
+      else if(eff.type==='ronderos_expire'){G.pueblo+=5;log('🛡️ Los dirigentes se desmarcan del pacto: +5 pueblo','bad');}
+      else if(eff.type==='congresista_defect'){
+        const s=pickRandomBoughtSeat();if(s){s.bought=false;log(`🐀 Congresista de ${s.partyIdx>=0?PARTIES[s.partyIdx].name:'Oposición'} se voltea`,'bad');}
+      }
+      G.delayedEffects.splice(i,1);
+    }
+  }
+  // Elections every 12 months
+  if(G.month%12===0&&G.month>0){
+    log('🗳️ ELECCIONES CONGRESALES','danger');
+    let lost=0;
+    if(G.pueblo>60){lost=5;log('📉 Pueblo furioso: pierdes 5 congresistas','bad');}
+    else if(G.pueblo>40){lost=2;log('📉 Malestar popular: pierdes 2 congresistas','bad');}
+    for(let i=0;i<lost;i++){const s=pickRandomBoughtSeat();if(s)s.bought=false;}
+    if(G.pueblo<=30){log('😈 Pueblo resignado: pacto se mantiene','good');}
+  }
+  // Congresistas may defect if unpaid
+  if(G.month%6===0&&G.money<0){
+    G.delayedEffects.push({monthsLeft:1,type:'congresista_defect'});
+    log('💸 Sin plata para sobornos — un congresista duda','bad');
+  }
+  G.fiscal=Math.min(100,G.fiscal);G.prensa=Math.min(100,G.prensa);G.pueblo=Math.min(100,G.pueblo);
+  if(G.month%3===0)randomEvent();
+  // Dilemma every ~5 months starting month 4
+  if(G.month>=4&&G.month%5===0&&!dilemmaActive)triggerDilemma();
+  // Record budget each month
+  recordBudget();
+  if(checkEndConditions())return;
+  updateTopBar();updateThreats();updateMoneyFlow();updateSidePanel();
+  // Update music intensity
+  updateMusicIntensity();
+}
+// Centralized defeat check — call after any state mutation
+function checkEndConditions(){
+  if(!G.running)return true;
+  if(G.fiscal>=100){gameOver('El Implacable Fiscal allanó el primer departamento al amanecer. En tres horas, los chats, las cuentas y los nombres estaban en su escritorio.');return true;}
+  if(G.prensa>=100){gameOver('El Periódico de los Justos publicó los audios completos. En 48 horas, el pacto quedó desnudo en cadena nacional.');return true;}
+  if(G.pueblo>=100){gameOver('El Despertar del Sur arrastró Arequipa, Puno, Cusco. Lima se sumó al cuarto día. Ni el Toque de Queda frenó la marcha. El Congreso amaneció rodeado.');return true;}
+  if(G.money<-50000){gameOver('Sin plata no hay lealtades. El Primer Arrepentido cantó: nombres, fechas, cuentas. Los demás cayeron como dominós.');return true;}
+  return false;
+}
+function randomEvent(){
+  const e=[
+    {c:G.mines.filter(m=>m.mercury).length>0,m:'🐟 ¡CHESU! El Silencio del Río Madre: 78% de Puerto Maldonado tiene mercurio en la sangre',f:()=>{G.prensa+=6;G.pueblo+=4}},
+    {c:G.routes.length>1,m:'🚨 ¡CHESU! La Intercepción de Tocache: DEA captura cargamento',f:()=>{G.fiscal+=8;if(G.routes.length>0)G.routes.pop()}},
+    {c:G.sicarios>1,m:'💀 ¡CHESU madre! El Confesionario del Callao: sicario nombra a congresistas',f:()=>{G.fiscal+=10;G.prensa+=8}},
+    {c:G.seats.filter(s=>s.bought).length>10,m:'📱 ¡Qué CHESU! Los Audios de la Hermandad de los Puños Inmaculados explotan en redes',f:()=>{G.prensa+=12;G.pueblo+=6}},
+    {c:G.seats.filter(s=>s.bought).length>15,m:'📞 ¡CHESU! La Intervención Telefónica del Club de los Caballeros Precoces',f:()=>{G.prensa+=10;G.fiscal+=8}},
+    {c:G.blocks.filter(b=>b.paying).length>5,m:'✊ La Federación del Pacto Cobrado convoca a paro nacional de bodegueros',f:()=>{G.pueblo+=8;G.prensa+=4}},
+    {c:G.judges>0,m:'👜 ¡CHESU! La Colección Suiza: relojes no declarados de un magistrado',f:()=>{G.fiscal+=5;G.judges=Math.max(0,G.judges-1)}},
+    {c:G.media>0,m:'📰 El Periódico de los Justos: medio alternativo gana tracción',f:()=>{G.prensa+=7}},
+    {c:G.lawsPassed.fiscalia,m:'🌍 ¡Qué CHESU! La Comisión Interamericana condena la captura de la Fiscalía',f:()=>{G.prensa+=8;G.pueblo+=4}},
+    {c:G.lawsPassed.tc,m:'📢 El Manifiesto de los 200 Juristas contra la captura del TC',f:()=>{G.prensa+=6;G.pueblo+=3}},
+    {c:G.lawsPassed.extincion,m:'🏦 ¡CHESU! La Cuenta de Andorra: fondos offshore del pacto',f:()=>{G.fiscal+=7;G.prensa+=5}},
+    {c:G.lawsPassed.reinfo,m:'🏔️ El Satélite Delator: NASA publica imágenes de devastación minera',f:()=>{G.prensa+=8;G.pueblo+=3}},
+    {c:G.sicarios>2,m:'🎙️ ¡CHESU! El Incidente de los Canapés: brindis filtrado revela pacto con financistas en negro',f:()=>{G.fiscal+=6;G.prensa+=6}},
+    {c:G.pueblo>50,m:'✊ El Despertar del Sur empieza: Puno y Arequipa cierran las carreteras del altiplano',f:()=>{G.pueblo+=6;G.prensa+=5}},
+    {c:G.money>200000,m:'🗳️ ¡CHESU! El Padrón Fantasma: la JNE detecta 200 mil afiliados muertos pagando cuota',f:()=>{G.fiscal+=6}},
+    {c:true,m:'📊 El Sondeo de la Vergüenza: 9 de cada 10 peruanos quieren cerrar el Congreso ya',f:()=>{G.pueblo+=3}},
+    {c:true,m:'📺 El Periódico de los Justos saca serie dominical: 2 millones de vistas en 24 horas',f:()=>{G.prensa+=5}},
+    {c:true,m:'🎓 El Aula Magna en Pie: 30 rectores firman carta abierta exigiendo cierre del Congreso',f:()=>{G.pueblo+=4;G.prensa+=2}},
+    {c:G.fiscal>50,m:'🔍 ¡CHESU! El Implacable Fiscal abre expediente especial contra el pacto',f:()=>{G.fiscal+=4;G.prensa+=3}},
+    {c:G.money<20000,m:'🐀 El Primer Arrepentido se reúne con la fiscalía: ofrece nombres a cambio de protección',f:()=>{G.fiscal+=8;G.prensa+=4}},
+  ];
+  const v=e.filter(x=>x.c),ev=v[Math.floor(Math.random()*v.length)];ev.f();log(ev.m,'danger');
+  checkEndConditions();
+}
+let fadeOutInterval=0;
+function gameOver(reason){
+  G.running=false;clearInterval(tickInterval);cancelAnimationFrame(renderId);renderId=0;
+  musicPlaying=false;
+  clearInterval(fadeOutInterval);
+  // Game over debe cerrar cualquier modal abierto (dilema, leaderboard, budget, tutorial)
+  dilemmaActive=false;
+  document.getElementById('dilemma-modal').classList.remove('active');
+  document.getElementById('budget-modal').classList.remove('active');
+  document.getElementById('leaderboard-modal').classList.remove('active');
+  const tutOv=document.getElementById('tutorial-overlay');if(tutOv)tutOv.classList.remove('active');
+  tutStep=-1;
+  // Capture local reference: si reinician rápido, el fade NO afecta la pista nueva
+  const fadingTrack=cumbia;
+  if(fadingTrack){
+    fadeOutInterval=setInterval(()=>{
+      if(!fadingTrack)return;
+      fadingTrack.volume=Math.max(0,fadingTrack.volume-0.05);
+      if(fadingTrack.volume<=0){clearInterval(fadeOutInterval);try{fadingTrack.pause();}catch(e){}}
+    },100);
+  }
+  // Fallen villain = partido con MÁS congresistas comprados en esta run (real, no random)
+  const partyCounts=PARTIES.map((_,i)=>G.seats.filter(s=>s.bought&&s.partyIdx===i).length);
+  const maxCount=Math.max(...partyCounts);
+  const fallenIdx=maxCount>0?partyCounts.indexOf(maxCount):0;
+  const fallenParty=PARTIES[fallenIdx];
+  // Determine fate based on what killed the pacto — simplified, no party names
+  let fateImg;
+  if(reason.includes('Implacable')){
+    fateImg=SP('obj-carcel.png');
+  }else if(reason.includes('Periódico')||reason.includes('Periodico')){
+    fateImg=SP('obj-mansion.png');
+  }else if(reason.includes('Despertar')){
+    fateImg=SP('obj-helicoptero.png');
+  }else{
+    fateImg=SP('obj-maleta.png');
+  }
+  document.getElementById('go-reason').innerHTML=`<div style="margin-bottom:12px;display:flex;align-items:center;justify-content:center"><img src="${fateImg}" alt="" style="height:100px;image-rendering:pixelated"></div>${reason}`;
+  const lc=Object.keys(G.lawsPassed).length;
+  const bought=G.seats.filter(s=>s.bought).length;
+  const yrs=Math.floor(G.monthsAlive/12),mos=G.monthsAlive%12;
+  const timeStr=yrs>0?`${yrs} año${yrs>1?'s':''} ${mos} meses`:`${mos} meses`;
+  document.getElementById('go-stats').innerHTML=`Duraste ${timeStr}<br>Robaste S/ ${fmt(G.totalStolen)}<br>${bought} congresistas comprados · ${lc} leyes aprobadas`;
+  // Save run stats for share + leaderboard
+  const fateKey=reason.includes('Implacable')?'fiscal':reason.includes('Periódico')||reason.includes('Periodico')?'prensa':reason.includes('Despertar')?'pueblo':'money';
+  window._runStats={m:G.monthsAlive,r:G.totalStolen,l:lc,p:PARTIES.indexOf(fallenParty),f:fateKey};
+  // Auto-fetch leaderboard
+  loadLeaderboard();
+  document.getElementById('game-over').classList.add('active');
+}
+
+// =============================================
+// UI
+// =============================================
+function updateTopBar(){
+  document.getElementById('money-val').textContent='S/. '+fmt(G.money);
+  document.getElementById('money-val').className='stat-val '+(G.money<0?'deficit':'money');
+  document.getElementById('power-val').textContent=G.seats.filter(s=>s.bought).length+'/130';
+  document.getElementById('month-val').textContent=MONTHS[G.month%12]+' '+(2026+Math.floor(G.month/12));
+  const md=document.getElementById('money-detail');
+  if(md)md.innerHTML=`<span class="inc">+${fmt(G.lastIncome)}</span> <span class="exp">-${fmt(G.lastExpense)}</span>`;
+}
+function updateThreats(){
+  ['fiscal','prensa','pueblo'].forEach(t=>{
+    const v=Math.round(G[t]);
+    document.getElementById(t+'-val').textContent=v+'%';
+    document.getElementById(t+'-bar').style.transform='scaleX('+v/100+')';
+    document.getElementById(t+'-bar').style.animation=v>70?'pulse .5s infinite':'none';
+  });
+}
+function updateMoneyFlow(){
+  const si=calcSierraIncome(),se=calcSelvaIncome(),co=calcCostaIncome(),la=G.laundering*5000,ex=getCurrentExpenses(),n=si+se+co+la-ex;
+  const gs='width:18px;height:18px';
+  document.getElementById('money-flow').innerHTML=`<div class="mf-title">★ FLUJO ★</div>
+<div class="mf-grid">
+<div class="mf-row"><span><img src="gi/mining.png" class="gi" style="${gs}"> Min</span><span class="mf-inc">+${fmt(si)}</span></div>
+<div class="mf-row"><span><img src="gi/chemical-drop.png" class="gi" style="${gs}"> Nar</span><span class="mf-inc">+${fmt(se)}</span></div>
+<div class="mf-row"><span><img src="gi/pistol-gun.png" class="gi" style="${gs}"> Ext</span><span class="mf-inc">+${fmt(co)}</span></div>
+<div class="mf-row"><span><img src="gi/banknote.png" class="gi" style="${gs}"> Gto</span><span class="mf-exp">-${fmt(ex)}</span></div>
+${la?`<div class="mf-row"><span><img src="gi/bank.png" class="gi" style="${gs}"> Lav</span><span class="mf-inc">+${fmt(la)}</span></div>`:''}<div class="mf-row mf-net"><span>Neto</span><span style="color:${n>=0?'#2D7A1A':'#8A2000'}"><b>S/ ${n>=0?'+':''}${fmt(n)}</b></span></div>
+</div>`;
+}
+function switchView(v){
+  currentView=v;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.tab-'+(v==='narco'?'narco':v)).classList.add('active');
+  const sidePanel=document.getElementById('side-panel');
+  if(sidePanel){
+    if(window.innerWidth<768&&v==='congreso')sidePanel.style.maxHeight='38dvh';
+    else sidePanel.style.maxHeight='';
+  }
+  updateSidePanel();
+  resizeCanvas();
+}
+
+// =============================================
+// CUMBIA AUDIO — single MP3, normal playbackRate
+// =============================================
+let cumbia = null;
+let musicPlaying = false;
+
+function initAudio(){
+  try {
+    // Stop any pending fade-out before creating new track
+    clearInterval(fadeOutInterval);
+    if(cumbia){try{cumbia.pause();}catch(e){}}
+    cumbia = new Audio('/audio/cumbia.mp3');
+    cumbia.loop = true;
+    cumbia.volume = 0.5;
+    cumbia.playbackRate = 1.0;
+    cumbia.play().then(()=>{ musicPlaying = true; }).catch(()=>{
+      // iOS needs another gesture, retry on next click
+      document.addEventListener('click', function retry(){
+        cumbia.play().then(()=>{ musicPlaying = true; });
+        document.removeEventListener('click', retry);
+      }, {once:true});
+    });
+  } catch(e){ console.log('Audio not available:', e); }
+}
+
+function updateMusicIntensity(){
+  // Intentionally empty — cumbia plays at normal 1.0x speed always
+}
+
+// (synth instruments removed — using MP3)
+
+
+// =============================================
+// INIT
+// =============================================
+function initGame(){
+  G.money=180000;G.month=0;G.fiscal=5;G.prensa=5;G.pueblo=5;G._prev_fiscal=0;G._prev_prensa=0;G._prev_pueblo=0;
+  G.mines=[];G.cocaFields=[];G.labs=[];G.routes=[];G.lawsPassed={};G.particles=[];G.delayedEffects=[];
+  G.sicarios=0;G.laundering=0;G.judges=0;G.media=0;G.flyingEnvelopes=[];
+  G.lastIncome=0;G.lastExpense=0;G.totalStolen=0;G.monthsAlive=0;
+  G.cooldowns={terruqueo:0,galletitas:0,emergencia:0,prescribir:0};
+  // Reset transient state from previous run
+  for(const k in ginoSeen)delete ginoSeen[k];
+  newsQueue.length=0;
+  window._currentDilemma=null;
+  window._runStats=null;
+  window._myRank=null;
+  window._submittedThisRun=false;
+  dilemmaActive=false;
+  lastPanelHtml='';lastPanelView='';
+  budgetHistory=[];
+  G.blocks=BIZ.map(b=>({...b,extorted:false,resistant:false,paying:false}));
+  G.seats=[];
+  // 91 congresistas del pacto (agrupados por partido)
+  [24,18,15,10,8,7,5,4].forEach((n,pi)=>{for(let i=0;i<n;i++)G.seats.push({partyIdx:pi,bought:false});});
+  // 39 oposicion/independientes al final
+  for(let i=0;i<39;i++)G.seats.push({partyIdx:-1,bought:false,indie:true});
+  // NO shuffle — quedan agrupados por partido
+  // Empiezas con 12 congresistas ya comprados (1 de cada partido + 4 extra del partido mayor)
+  let startBought=0;
+  const partiesUsed=new Set();
+  // Pasada 1: 1 de cada partido
+  for(const s of G.seats){
+    if(s.partyIdx>=0&&!partiesUsed.has(s.partyIdx)){
+      s.bought=true;startBought++;partiesUsed.add(s.partyIdx);
+      if(startBought>=12)break;
+    }
+  }
+  // Pasada 2: completar hasta 12 desde el partido mayor (Fuerza Kongresal)
+  for(const s of G.seats){
+    if(startBought>=12)break;
+    if(s.partyIdx>=0&&!s.bought){s.bought=true;startBought++;}
+  }
+}
+function startGame(){
+  if(G.running)return;
+  document.getElementById('intro').classList.add('hidden');
+  document.getElementById('game-over').classList.remove('active');
+  document.getElementById('dilemma-modal').classList.remove('active');
+  clearInterval(tickInterval);
+  cancelAnimationFrame(renderId);
+  dilemmaActive=false;
+  initGame();initCanvas();
+  G.running=true;
+  lastPanelHtml='';lastPanelView='';
+  updateSidePanel(true);updateTopBar();updateThreats();updateMoneyFlow();
+  renderId=requestAnimationFrame(renderLoop);
+  tickInterval=setInterval(gameTick,2800);
+  budgetHistory=[];
+  initAudio();
+  startTutorial();
+}
+// Intro parties
+// Intro parties removed — cleaner intro
+// Keyboard shortcuts
+document.addEventListener('keydown',e=>{if(!G.running)return;if(e.key==='1')switchView('mineria');if(e.key==='2')switchView('narco');if(e.key==='3')switchView('extorsion');if(e.key==='4')switchView('congreso');});
+
+// =============================================
+// SEAT TOOLTIP (hover/tap)
+// =============================================
+function seatAtPoint(px,py){
+  if(!congresoGrid||currentView!=='congreso')return-1;
+  const{gridX,gridY,cellSz,gridCols,gridRows}=congresoGrid;
+  const col=Math.floor((px-gridX)/cellSz),row=Math.floor((py-gridY)/cellSz);
+  if(col<0||col>=gridCols||row<0||row>=gridRows)return-1;
+  const idx=row*gridCols+col;
+  return idx<G.seats.length?idx:-1;
+}
+function showSeatTooltip(seatIdx,screenX,screenY){
+  const tt=document.getElementById('seat-tooltip');
+  if(seatIdx<0){tt.style.display='none';return;}
+  const seat=G.seats[seatIdx];
+  const isOpp=seat.partyIdx===-1;
+  const party=isOpp?null:PARTIES[seat.partyIdx];
+  const icon=party?party.icon:'⚪';
+  const name=party?party.name:'Oposicion';
+  const leader=party?party.leader:'';
+  let status;
+  if(seat.bought)status='<span class="tt-bought">💰 Comprado</span>';
+  else if(isOpp)status='<span class="tt-opposition">No disponible</span>';
+  else status='<span class="tt-available">Disponible — S/ 30K</span>';
+  const logoHtml=party?`<img src="${party.logo}" class="tt-logo" alt="">`:`<span class="tt-icon">${icon}</span>`;
+  tt.innerHTML=`${logoHtml}<span class="tt-party">${name}</span>${leader?'<br><span class="tt-real">'+leader+'</span>':''}<div class="tt-status">${status}</div>`;
+  tt.style.display='block';
+  const wrap=document.getElementById('scene-wrap');
+  const wr=wrap.getBoundingClientRect();
+  let tx=screenX-wr.left+12,ty=screenY-wr.top-40;
+  if(tx+200>wr.width)tx=tx-220;
+  if(ty<0)ty=screenY-wr.top+20;
+  tt.style.left=tx+'px';tt.style.top=ty+'px';
+}
+(function(){
+  const cv=document.getElementById('canvas');
+  // Desktop hover
+  cv.addEventListener('mousemove',e=>{
+    const r=cv.getBoundingClientRect();
+    const x=(e.clientX-r.left)*(cv.width/dpr/r.width);
+    const y=(e.clientY-r.top)*(cv.height/dpr/r.height);
+    const idx=seatAtPoint(x,y);
+    showSeatTooltip(idx,e.clientX,e.clientY);
+  });
+  cv.addEventListener('mouseleave',()=>{document.getElementById('seat-tooltip').style.display='none';});
+  // Mobile tap
+  cv.addEventListener('touchstart',e=>{
+    const t=e.touches[0];
+    const r=cv.getBoundingClientRect();
+    const x=(t.clientX-r.left)*(cv.width/dpr/r.width);
+    const y=(t.clientY-r.top)*(cv.height/dpr/r.height);
+    const idx=seatAtPoint(x,y);
+    if(idx>=0){showSeatTooltip(idx,t.clientX,t.clientY);e.preventDefault();}
+    else{document.getElementById('seat-tooltip').style.display='none';}
+  },{passive:false});
+})();
+
+// =============================================
+// TUTORIAL SYSTEM
+// =============================================
+const TUTORIAL_STEPS=[
+  {text:'Bienvenido al Pacto. Empiezas con S/ 180K y 12 congresistas. Primero, reclama una concesión minera.',tab:'mineria',pos:'panel'},
+  {text:'El narcotráfico tiene 3 pasos: plantar coca, montar laboratorios y abrir rutas. Cada paso multiplica las ganancias.',tab:'narco',pos:'panel'},
+  {text:'La extorsión es rápida: envías cartas de cobro a negocios. Algunos resisten — ahí necesitas sicarios.',tab:'extorsion',pos:'panel'},
+  {text:'El Congreso es tu escudo. Compra congresistas, aprueba leyes de impunidad. Pero cada compra cuesta S/ 2K/mes.',tab:'congreso',pos:'panel'},
+  {text:'Las barras de abajo son tus amenazas: Fiscalía, Prensa y Pueblo. Si alguna llega a 100%, caes.',pos:'bottom'},
+  {text:'Diversifica ingresos y contén amenazas. Suerte, mafioso.',pos:'center'},
+];
+let tutStep=-1;
+function pauseGame(){clearInterval(tickInterval);tickInterval=0;}
+function resumeGame(){if(!tickInterval&&G.running)tickInterval=setInterval(gameTick,2800);}
+function startTutorial(){
+  tutStep=0;pauseGame();showTutStep();
+}
+function showTutStep(){
+  const ov=document.getElementById('tutorial-overlay');
+  const bub=document.getElementById('tut-bubble');
+  if(tutStep>=TUTORIAL_STEPS.length){ov.classList.remove('active');tutStep=-1;resumeGame();return;}
+  const s=TUTORIAL_STEPS[tutStep];
+  if(s.tab)switchView(s.tab);
+  ov.classList.add('active');
+  bub.innerHTML=`<div class="tut-step">PASO ${tutStep+1}/${TUTORIAL_STEPS.length}</div><div class="tut-text">${s.text}</div><button class="tut-btn" onclick="nextTutStep()">${tutStep<TUTORIAL_STEPS.length-1?'SIGUIENTE':'JUGAR'}</button><span class="tut-skip" onclick="skipTutorial()">saltar</span>`;
+  // Position
+  if(s.pos==='bottom'){bub.style.cssText='bottom:80px;left:50%;transform:translateX(-50%);top:auto;right:auto';}
+  else if(s.pos==='center'){bub.style.cssText='top:50%;left:50%;transform:translate(-50%,-50%);right:auto;bottom:auto';}
+  else{bub.style.cssText='top:120px;right:10px;left:auto;bottom:auto;transform:none';}
+}
+function nextTutStep(){tutStep++;showTutStep();}
+function skipTutorial(){document.getElementById('tutorial-overlay').classList.remove('active');tutStep=-1;resumeGame();}
+
+// =============================================
+// DILEMMA SYSTEM
+// =============================================
+const DILEMMAS=[
+  {cond:()=>G.mines.filter(m=>m.mercury).length>0,
+   text:'Un periodista tiene fotos satelitales de tus dragas con mercurio. Pide S/ 50K por callar.',
+   a:{label:'Pagar S/ 50K',cost:'Pierdes dinero pero silencio',fn:()=>{G.money-=50000;log('📸 Periodista comprado — fotos destruidas','info');}},
+   b:{label:'Amenazarlo',cost:'Gratis pero 40% de que publique',fn:()=>{if(Math.random()<0.4){G.prensa+=15;G.pueblo+=8;log('📸 ¡Periodista publicó! Escándalo','danger');}else{G.prensa+=2;log('📸 Periodista amedrentado — se retiró','good');}}}},
+  {cond:()=>G.sicarios>1,
+   text:'Un sicario capturado quiere negociar con la Fiscalía. Ofrece nombres a cambio de libertad.',
+   a:{label:'Silenciarlo en prisión (S/ 20K)',cost:'-20K, riesgo: +8 prensa si se filtra',fn:()=>{G.money-=20000;if(Math.random()<0.3){G.prensa+=8;log('💀 Silenciamiento en prisión filtrado a la prensa','danger');}else{log('💀 Testigo silenciado','info');}}},
+   b:{label:'Dejarlo hablar',cost:'Fiscal +12 pero el sicario miente sobre rivales',fn:()=>{G.fiscal+=12;log('🗣️ Sicario habla — Fiscalía avanza','bad');}}},
+  {cond:()=>G.blocks.filter(b=>b.paying).length>3,
+   text:'Los comerciantes extorsionados están organizando una marcha. Un dirigente ofrece frenarla por S/ 30K.',
+   a:{label:'Pagar al dirigente (S/ 30K)',cost:'-30K, pueblo -5 temporal',fn:()=>{G.money-=30000;G.pueblo=Math.max(0,G.pueblo-5);log('✊ Marcha cancelada — dirigente comprado','good');}},
+   b:{label:'Ignorar la marcha',cost:'Pueblo +10, Prensa +6',fn:()=>{G.pueblo+=10;G.prensa+=6;log('✊ Gran marcha de comerciantes — cobertura nacional','danger');}}},
+  {cond:()=>G.seats.filter(s=>s.bought).length>12,
+   text:'Un congresista comprado quiere postularse de gobernador. Pide S/ 80K para la campaña o se va.',
+   a:{label:'Financiar campaña (S/ 80K)',cost:'Mantiene lealtad, posición regional',fn:()=>{G.money-=80000;G.pueblo=Math.max(0,G.pueblo-3);log('🏛️ Congresista financiado — ahora es tu gobernador','good');}},
+   b:{label:'Dejarlo ir',cost:'Pierdes 1 congresista, él habla',fn:()=>{const s=pickRandomBoughtSeat();if(s)s.bought=false;G.fiscal+=5;log('🐀 Congresista se fue y habló con la fiscalía','bad');}}},
+  {cond:()=>G.judges>0,
+   text:'Un juez comprado está bajo vigilancia del CNM. Si lo mantienen, puede caer.',
+   a:{label:'Sacarlo del caso (S/ 25K)',cost:'Pierdes al juez pero salva la red',fn:()=>{G.money-=25000;G.judges=Math.max(0,G.judges-1);G.fiscal=Math.max(0,G.fiscal-5);log('⚖️ Juez retirado discretamente','info');}},
+   b:{label:'Mantenerlo operando',cost:'50% de escándalo: +15 prensa, +10 fiscal',fn:()=>{if(Math.random()<0.5){G.prensa+=15;G.fiscal+=10;G.judges=Math.max(0,G.judges-1);log('⚖️ ¡Juez cae en escándalo público!','danger');}else{log('⚖️ Juez pasa vigilancia — sigue operando','good');}}}},
+  {cond:()=>G.lawsPassed.reinfo,
+   text:'Comunidades nativas bloquean la carretera a tus minas. Llevan 2 semanas.',
+   a:{label:'Negociar (S/ 15K)',cost:'Pierdes dinero, pueblo -3',fn:()=>{G.money-=15000;G.pueblo=Math.max(0,G.pueblo-3);log('🏔️ Comunidades aceptan compensación','info');}},
+   b:{label:'Desalojar con fuerza',cost:'Gratis pero pueblo +12, prensa +8',fn:()=>{G.pueblo+=12;G.prensa+=8;log('🏔️ Desalojo violento — imágenes recorren el mundo','danger');}}},
+  {cond:()=>G.routes.length>0,
+   text:'La DEA capturó un piloto en una de tus rutas. Sabe todo sobre la operación.',
+   a:{label:'Sobornar al fiscal del caso (S/ 35K)',cost:'Lo sacan por defectos de forma, ruta intacta',fn:()=>{G.money-=35000;log('🛩️ Piloto liberado por vicios procesales','good');}},
+   b:{label:'Abandonar al piloto',cost:'Piloto habla: fiscal +10, pierdes 1 ruta',fn:()=>{G.fiscal+=10;if(G.routes.length>0)G.routes.pop();log('🛩️ Piloto colabora con la DEA — ruta perdida','bad');}}}
+,
+  {cond:()=>G.media>0,
+   text:'Tu medio controlado puede publicar una investigación falsa contra un fiscal honesto.',
+   a:{label:'Publicar fake news',cost:'-8 fiscal, pero +10 prensa si se descubre (30%)',fn:()=>{G.fiscal=Math.max(0,G.fiscal-8);if(Math.random()<0.3){G.prensa+=10;log('📰 Fake news descubierta — credibilidad destruida','danger');}else{log('📰 Fiscal desacreditado exitosamente','good');}}},
+   b:{label:'No arriesgarse',cost:'Nada cambia',fn:()=>{log('📰 Decides no publicar — prudencia','info');}}},
+];
+let dilemmaActive=false;
+function triggerDilemma(){
+  if(dilemmaActive)return;
+  const valid=DILEMMAS.filter(d=>d.cond());
+  if(!valid.length)return;
+  const d=valid[Math.floor(Math.random()*valid.length)];
+  dilemmaActive=true;
+  pauseGame();
+  document.getElementById('dilemma-text').textContent=d.text;
+  document.getElementById('dilemma-opts').innerHTML=
+    `<div class="dilemma-opt" onclick="resolveDilemma('a')"><span class="do-label">${d.a.label}</span><span class="do-cost">${d.a.cost}</span></div>`+
+    `<div class="dilemma-opt" onclick="resolveDilemma('b')"><span class="do-label">${d.b.label}</span><span class="do-cost">${d.b.cost}</span></div>`;
+  document.getElementById('dilemma-modal').classList.add('active');
+  window._currentDilemma=d;
+}
+function resolveDilemma(choice){
+  const d=window._currentDilemma;if(!d)return;
+  if(choice==='a')d.a.fn();else d.b.fn();
+  document.getElementById('dilemma-modal').classList.remove('active');
+  dilemmaActive=false;
+  resumeGame();
+  if(checkEndConditions())return;
+  updateSidePanel();updateTopBar();updateThreats();updateMoneyFlow();
+}
+
+// =============================================
+// BUDGET ARCHIVE
+// =============================================
+let budgetHistory=[];
+function recordBudget(){
+  const si=calcSierraIncome(),se=calcSelvaIncome(),co=calcCostaIncome(),la=G.laundering*5000,ex=getCurrentExpenses();
+  budgetHistory.push({month:MONTHS[(G.month-1+12)%12]+' '+(2026+Math.floor((G.month-1)/12)),sierra:si,selva:se,costa:co,lavado:la,gastos:ex,balance:G.money});
+  if(budgetHistory.length>6)budgetHistory.shift();
+}
+function openBudget(){
+  if(!G.running||!budgetHistory.length)return;
+  const c=document.getElementById('budget-content');
+  c.innerHTML=budgetHistory.slice().reverse().map(b=>{
+    const net=b.sierra+b.selva+b.costa+b.lavado-b.gastos;
+    return`<div class="budget-month"><div class="bm-title">${b.month}</div>
+<div class="bm-row"><span><img src="gi/mining.png" class="gi" style="width:14px;height:14px"> Mineria</span><span class="bm-inc">+${fmt(b.sierra)}</span></div>
+<div class="bm-row"><span><img src="gi/chemical-drop.png" class="gi" style="width:14px;height:14px"> Narco</span><span class="bm-inc">+${fmt(b.selva)}</span></div>
+<div class="bm-row"><span><img src="gi/pistol-gun.png" class="gi" style="width:14px;height:14px"> Extorsion</span><span class="bm-inc">+${fmt(b.costa)}</span></div>
+${b.lavado?`<div class="bm-row"><span><img src="gi/bank.png" class="gi" style="width:14px;height:14px"> Lavado</span><span class="bm-inc">+${fmt(b.lavado)}</span></div>`:''}
+<div class="bm-row"><span><img src="gi/banknote.png" class="gi" style="width:14px;height:14px"> Gastos</span><span class="bm-exp">-${fmt(b.gastos)}</span></div>
+<div class="bm-row bm-net"><span>Neto</span><span style="color:${net>=0?'#2D7A1A':'#8A2000'}">S/ ${net>=0?'+':''}${fmt(net)}</span></div>
+<div class="bm-row"><span>Balance</span><span>S/ ${fmt(b.balance)}</span></div></div>`;
+  }).join('');
+  document.getElementById('budget-modal').classList.add('active');
+}
+function closeBudget(){document.getElementById('budget-modal').classList.remove('active');}
+
+// =============================================
+// UTILITIES
+// =============================================
+function fmt(n){if(Math.abs(n)>=1e6)return(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e3)return(n/1e3).toFixed(0)+'K';return Math.round(n).toString();}
+const newsQueue=[];
+function log(msg,type='info'){
+  // Update marquee
+  newsQueue.push(msg);if(newsQueue.length>5)newsQueue.shift();
+  const nt=document.getElementById('news-text');
+  if(nt){nt.textContent=newsQueue.join('  ★  ');nt.style.animation='none';nt.offsetHeight;nt.style.animation='marquee-scroll '+(Math.max(8,newsQueue.join('  ★  ').length*0.25))+'s linear infinite';}
+}
+// Act banner — narrative arc moments
+function showActBanner(act,subtitle){
+  const b=document.getElementById('act-banner');
+  if(!b)return;
+  b.innerHTML=`<div class="ab-act">${act}</div><div class="ab-sub">${subtitle}</div>`;
+  b.classList.add('show');
+  setTimeout(()=>b.classList.remove('show'),3500);
+}
+// Gino Costa cameos in news marquee — embedded campaign message
+const ginoSeen={};
+function ginoCameo(key,msg){
+  if(ginoSeen[key])return;
+  ginoSeen[key]=true;
+  log('📺 GINO COSTA: '+msg,'danger');
+}
+function buildShareUrl(){
+  const s=window._runStats||{m:G.monthsAlive,r:G.totalStolen,l:Object.keys(G.lawsPassed).length,p:0,f:'fiscal'};
+  const name=(localStorage.getItem('pactoName')||'').slice(0,24);
+  const params=new URLSearchParams({m:s.m,r:s.r,l:s.l,p:s.p,f:s.f,n:name});
+  return 'r.html?'+params.toString();
+}
+function shareGame(platform,evt){
+  const s=window._runStats||{m:G.monthsAlive,r:G.totalStolen,l:Object.keys(G.lawsPassed).length};
+  const txt=`Sobreviví ${s.m} meses como el pacto mafioso y robé S/ ${fmt(s.r)}. ¿Tú cuánto duras? 🗳️ Gino Costa al Senado — marca los 5 cóndores`;
+  const url=buildShareUrl();
+  if(platform==='whatsapp')window.open(`https://wa.me/?text=${encodeURIComponent(txt+' '+url)}`);
+  else if(platform==='x')window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(txt)}&url=${encodeURIComponent(url)}`);
+  else if(platform==='copy'){navigator.clipboard.writeText(txt+' '+url);const b=evt.target;b.textContent='¡Copiado!';setTimeout(()=>b.textContent='Copiar link',2000);}
+}
+// =============================================
+// LEADERBOARD
+// =============================================
+let leaderboardCache=null;
+async function loadLeaderboard(){
+  try{
+    const res=await fetch('/api/leaderboard');
+    const data=await res.json();
+    leaderboardCache=data.scores||[];
+    renderLeaderboard();
+  }catch(e){console.log('Leaderboard load failed:',e);}
+}
+async function submitScore(){
+  const nameInput=document.getElementById('lb-name');
+  if(!nameInput)return;
+  const name=nameInput.value.trim().slice(0,24);
+  if(!name){nameInput.focus();nameInput.style.borderColor='#FA8132';return;}
+  localStorage.setItem('pactoName',name);
+  const s=window._runStats;
+  if(!s)return;
+  const btn=document.getElementById('lb-submit');
+  if(btn){btn.disabled=true;btn.textContent='Enviando...';}
+  let success=false;
+  try{
+    const res=await fetch('/api/leaderboard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...s,n:name})});
+    const data=await res.json();
+    if(res.ok&&data.scores){
+      leaderboardCache=data.scores;
+      window._myRank=data.rank;
+      window._submittedThisRun=true;
+      success=true;
+      renderLeaderboard();
+    }else if(btn){
+      btn.disabled=false;
+      btn.textContent=(data&&data.error)?('Error: '+data.error.slice(0,30)):'Falló — reintentar';
+    }
+  }catch(e){
+    console.log('Submit failed:',e);
+    if(btn){btn.disabled=false;btn.textContent='Falló — reintentar';}
+  }
+  if(success&&btn){btn.disabled=true;btn.textContent='Enviado ✓';}
+}
+function renderLeaderboard(){
+  const el=document.getElementById('leaderboard-content');
+  if(!el)return;
+  const scores=leaderboardCache||[];
+  const myName=localStorage.getItem('pactoName')||'';
+  // Submission check uses session flag, not name match (avoid blocking on alias collision)
+  const submitted=window._submittedThisRun===true;
+  let html='';
+  if(!submitted&&window._runStats){
+    html+=`<div class="lb-submit-box">
+      <div class="lb-prompt">Tu récord: <b>${window._runStats.m} meses · S/ ${fmt(window._runStats.r)}</b></div>
+      <input type="text" id="lb-name" placeholder="Tu nombre o alias" maxlength="24" value="${myName.replace(/[<>"]/g,'')}">
+      <button id="lb-submit" onclick="submitScore()">Subir mi récord</button>
+    </div>`;
+  }
+  if(scores.length===0){
+    html+='<div class="lb-empty">Sé el primero en aparecer aquí.</div>';
+  }else{
+    html+='<div class="lb-list">';
+    scores.slice(0,20).forEach((s,i)=>{
+      const isMe=s.n===myName;
+      html+=`<div class="lb-row${isMe?' me':''}"><span class="lb-rank">${i+1}</span><span class="lb-name">${s.n.replace(/[<>]/g,'')}</span><span class="lb-stat">${s.m}m</span><span class="lb-stat">S/ ${fmt(s.r)}</span><span class="lb-stat">${s.l}/8</span></div>`;
+    });
+    html+='</div>';
+  }
+  el.innerHTML=html;
+}
+function openLeaderboard(){
+  document.getElementById('leaderboard-modal').classList.add('active');
+  if(!leaderboardCache)loadLeaderboard();
+  else renderLeaderboard();
+}
+function closeLeaderboard(){document.getElementById('leaderboard-modal').classList.remove('active');}
+</script>
+</body>
+</html>
